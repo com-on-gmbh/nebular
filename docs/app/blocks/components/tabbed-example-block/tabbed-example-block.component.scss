@@ -1,6 +1,10 @@
 @use '../../../@theme/styles/themes' as *;
 @use '../../../../../src/framework/theme/styles/globals' as *;
 
+:host([hidden]) {
+  display: none !important;
+}
+
 @include nb-install-component() {
   $tab-fg: nb-theme(color-fg-heading-light);
   $tab-active-fg: #ffffff;
