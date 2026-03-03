@@ -5,14 +5,14 @@
  */
 
 import { Injectable } from '@angular/core';
-import { NbFontIconPackParams, NbIconPack, NbIconPackParams, NbIconPackType, NbIcons } from './icon-pack';
 import { NbFontIcon, NbIcon, NbSvgIcon } from './icon';
+import { NbFontIconPackParams, NbIconPack, NbIconPackParams, NbIconPackType, NbIcons } from './icon-pack';
 
 export class NbIconDefinition {
-  name: string;
-  type: string;
-  pack: string;
-  icon: NbIcon;
+  public name: string;
+  public type: string;
+  public pack: string;
+  public icon: NbIcon;
 }
 
 function throwPackNotFoundError(name: string) {
@@ -41,7 +41,7 @@ export class NbIconLibraries {
    * @param {NbIcon} icons
    * @param {NbIconPackParams} params
    */
-  registerSvgPack(name: string, icons: NbIcons, params: NbIconPackParams = {}) {
+  public registerSvgPack(name: string, icons: NbIcons, params: NbIconPackParams = {}) {
     this.packs.set(name, {
       name,
       icons: new Map(Object.entries(icons)),
@@ -55,7 +55,7 @@ export class NbIconLibraries {
    * @param {string} name
    * @param {NbIconPackParams} params
    */
-  registerFontPack(name: string, params: NbFontIconPackParams = {}) {
+  public registerFontPack(name: string, params: NbFontIconPackParams = {}) {
     this.packs.set(name, {
       name,
       params,
@@ -68,7 +68,7 @@ export class NbIconLibraries {
    * Returns pack by name
    * @param {string} name
    */
-  getPack(name: string): NbIconPack {
+  public getPack(name: string): NbIconPack {
     return this.packs.get(name);
   }
 
@@ -76,7 +76,7 @@ export class NbIconLibraries {
    * Sets pack as a default
    * @param {string} name
    */
-  setDefaultPack(name: string) {
+  public setDefaultPack(name: string) {
     if (!this.packs.has(name)) {
       throwPackNotFoundError(name);
     }
@@ -91,7 +91,7 @@ export class NbIconLibraries {
    *
    * @returns NbIconDefinition
    */
-  getSvgIcon(name: string, pack?: string): NbIconDefinition | null {
+  public getSvgIcon(name: string, pack?: string): NbIconDefinition | null {
     const iconsPack = pack ? this.getPackOrThrow(pack) : this.getDefaultPackOrThrow();
 
     if (iconsPack.type !== NbIconPackType.SVG) {
@@ -119,7 +119,7 @@ export class NbIconLibraries {
    *
    * @returns NbIconDefinition
    */
-  getFontIcon(name: string, pack?: string): NbIconDefinition {
+  public getFontIcon(name: string, pack?: string): NbIconDefinition {
     const iconsPack = pack ? this.getPackOrThrow(pack) : this.getDefaultPackOrThrow();
 
     if (iconsPack.type !== NbIconPackType.FONT) {
@@ -144,7 +144,7 @@ export class NbIconLibraries {
    *
    * @returns NbIconDefinition
    */
-  getIcon(name: string, pack?: string): NbIconDefinition | null {
+  public getIcon(name: string, pack?: string): NbIconDefinition | null {
     const iconsPack = pack ? this.getPackOrThrow(pack) : this.getDefaultPackOrThrow();
 
     if (iconsPack.type === NbIconPackType.SVG) {

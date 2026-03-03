@@ -4,9 +4,8 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, booleanAttribute, input } from '@angular/core';
 import { Subject } from 'rxjs';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 
 /**
  * An accordion allows to toggle the display of sections of content
@@ -66,37 +65,26 @@ import { convertToBoolProperty, NbBooleanInput } from '../helpers';
  * accordion-item-text-line-height:
  */
 @Component({
-    selector: 'nb-accordion',
-    template: `
-    <ng-content select="nb-accordion-item"></ng-content>
-  `,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'nb-accordion',
+  template: ` <ng-content select="nb-accordion-item"></ng-content> `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [],
 })
 export class NbAccordionComponent {
-
   openCloseItems = new Subject<boolean>();
 
   /**
    *  Allow multiple items to be expanded at the same time.
    * @type {boolean}
    */
-  @Input('multi')
-  get multi(): boolean {
-    return this.multiValue;
-  }
-  set multi(val: boolean) {
-    this.multiValue = convertToBoolProperty(val);
-  }
-  static ngAcceptInputType_multi: NbBooleanInput;
-
-  private multiValue = false;
+  multi = input(false, { transform: booleanAttribute });
 
   /**
    * Opens all enabled accordion items.
    */
   openAll() {
-    if (this.multi) {
+    if (this.multi()) {
       this.openCloseItems.next(false);
     }
   }

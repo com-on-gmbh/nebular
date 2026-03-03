@@ -4,29 +4,30 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
+import { NgClass } from '@angular/common';
 import {
+  AfterContentInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ContentChildren,
   ElementRef,
-  EventEmitter,
-  HostBinding,
-  Input,
-  Output,
-  QueryList,
-  ViewChild,
-  AfterContentInit,
+  inject,
+  input,
   OnDestroy,
+  output,
+  QueryList,
+  viewChild,
 } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { NbComponentSize } from '../component-size';
-import { NbPosition } from '../cdk/overlay/overlay-position';
-import { NbOptionComponent } from '../option/option.component';
 import { NbPortalDirective } from '../cdk/overlay/mapping';
+import { NbPosition } from '../cdk/overlay/overlay-position';
+import { NbOverlayModule } from '../cdk/overlay/overlay.module';
+import { NbComponentSize } from '../component-size';
+import { NbOptionModule } from '../option/option-list.module';
+import { NbOptionComponent } from '../option/option.component';
 
 // Component class scoped counter for aria attributes.
 let lastAutocompleteId: number = 0;
@@ -36,11 +37,19 @@ let lastAutocompleteId: number = 0;
  * Provides an `NbOptionList` overlay component.
  * */
 @Component({
-    selector: 'nb-autocomplete',
-    templateUrl: './autocomplete.component.html',
-    styleUrls: ['./autocomplete.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'nb-autocomplete',
+  standalone: true,
+  imports: [NgClass, NbOverlayModule, NbOptionModule],
+  templateUrl: './autocomplete.component.html',
+  styleUrls: ['./autocomplete.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    '[class.size-tiny]': 'size() === "tiny"',
+    '[class.size-small]': 'size() === "small"',
+    '[class.size-medium]': 'size() === "medium"',
+    '[class.size-large]': 'size() === "large"',
+    '[class.size-giant]': 'size() === "giant"',
+  },
 })
 export class NbAutocompleteComponent<T> implements AfterContentInit, OnDestroy {
   protected destroy$: Subject<void> = new Subject<void>();
@@ -48,25 +57,25 @@ export class NbAutocompleteComponent<T> implements AfterContentInit, OnDestroy {
   /**
    * HTML input reference to which autocomplete connected.
    * */
-  hostRef: ElementRef;
+  public hostRef: ElementRef;
 
   /**
    * Component scoped id for aria attributes.
    * */
-  id: string = `nb-autocomplete-${lastAutocompleteId++}`;
+  public id: string = `nb-autocomplete-${lastAutocompleteId++}`;
 
   /**
    * @docs-private
    * Current overlay position because of we have to toggle overlayPosition
    * in [ngClass] direction.
    */
-  _overlayPosition: NbPosition = '' as NbPosition;
+  protected _overlayPosition: NbPosition = '' as NbPosition;
 
-  get overlayPosition(): NbPosition {
+  public get overlayPosition(): NbPosition {
     return this._overlayPosition;
   }
 
-  set overlayPosition(value: NbPosition) {
+  public set overlayPosition(value: NbPosition) {
     this._overlayPosition = value;
     // Need run change detection after first set from NbAutocompleteDirective
     this.cd.detectChanges();
@@ -75,70 +84,68 @@ export class NbAutocompleteComponent<T> implements AfterContentInit, OnDestroy {
   /**
    * Returns width of the input.
    * */
-  get hostWidth(): number {
+  public get hostWidth(): number {
     return this.hostRef.nativeElement.getBoundingClientRect().width;
   }
 
   /**
    * Function passed as input to process each string option value before render.
    * */
-  @Input() handleDisplayFn: (value: any) => string;
+  public handleDisplayFn = input<(value: any) => string>();
 
   /**
    * Autocomplete size, available sizes:
    * `tiny`, `small`, `medium` (default), `large`, `giant`
    */
-  @Input() size: NbComponentSize = 'medium';
+  public size = input<NbComponentSize>('medium');
 
   /**
    * Flag passed as input to always make first option active.
    * */
-  @Input() activeFirst: boolean = false;
+  public activeFirst = input(false);
 
   /**
    * Specifies class to be set on `nb-option`s container (`nb-option-list`)
    * */
-  @Input() optionsListClass: NgClass['ngClass'];
+  public optionsListClass = input<NgClass['ngClass']>();
 
   /**
    * Specifies class for the overlay panel with options
    * */
-  @Input() optionsPanelClass: string | string[];
+  public optionsPanelClass = input<string | string[]>();
 
   /**
-   * Specifies width (in pixels) to be set on `nb-option`s container (`nb-option-list`)
+   * Specifies width (in pixels) to be set on `nb-option`s container (`nb-option-list`).
+   * Falls back to the host input's width when not set.
    * */
-  @Input()
-  get optionsWidth(): number {
-    return this._optionsWidth ?? this.hostWidth;
+  protected _optionsWidthInput = input<number | undefined>(undefined, { alias: 'optionsWidth' });
+
+  public get optionsWidth(): number {
+    return this._optionsWidthInput() ?? this.hostWidth;
   }
-  set optionsWidth(value: number) {
-    this._optionsWidth = value;
-  }
-  protected _optionsWidth: number | undefined;
 
   /**
    * Will be emitted when selected value changes.
    * */
-  @Output() selectedChange: EventEmitter<T> = new EventEmitter();
+  public selectedChange = output<T>();
 
   /**
    * List of `NbOptionComponent`'s components passed as content.
    * */
-  @ContentChildren(NbOptionComponent, { descendants: true }) options: QueryList<NbOptionComponent<T>>;
+  @ContentChildren(NbOptionComponent, { descendants: true }) public options: QueryList<NbOptionComponent<T>>;
 
   /**
    * NbOptionList with options content.
    * */
-  @ViewChild(NbPortalDirective) portal: NbPortalDirective;
+  public portal = viewChild.required(NbPortalDirective);
 
-  constructor(protected cd: ChangeDetectorRef) {}
+  protected cd = inject(ChangeDetectorRef);
 
-  ngAfterContentInit() {
+  public ngAfterContentInit(): void {
     this.options.changes.pipe(takeUntil(this.destroy$)).subscribe(() => this.cd.detectChanges());
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -147,35 +154,14 @@ export class NbAutocompleteComponent<T> implements AfterContentInit, OnDestroy {
    * Autocomplete knows nothing about host html input element.
    * So, attach method set input hostRef for styling.
    * */
-  setHost(hostRef: ElementRef) {
+  public setHost(hostRef: ElementRef): void {
     this.hostRef = hostRef;
   }
 
   /**
    * Propagate selected value.
    * */
-  emitSelected(selected: T) {
+  public emitSelected(selected: T): void {
     this.selectedChange.emit(selected);
-  }
-
-  @HostBinding('class.size-tiny')
-  get tiny(): boolean {
-    return this.size === 'tiny';
-  }
-  @HostBinding('class.size-small')
-  get small(): boolean {
-    return this.size === 'small';
-  }
-  @HostBinding('class.size-medium')
-  get medium(): boolean {
-    return this.size === 'medium';
-  }
-  @HostBinding('class.size-large')
-  get large(): boolean {
-    return this.size === 'large';
-  }
-  @HostBinding('class.size-giant')
-  get giant(): boolean {
-    return this.size === 'giant';
   }
 }

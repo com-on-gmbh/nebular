@@ -4,14 +4,25 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, booleanAttribute, inject, input } from '@angular/core';
 
 import { NbStatusService } from '../../services/status.service';
 import { NbComponentOrCustomStatus } from '../component-status';
-import { convertToBoolProperty } from '../helpers';
 
-export type NbBadgePhysicalPosition = 'top left' | 'top right' | 'bottom left' | 'bottom right' | 'center right' | 'center left';
-export type NbBadgeLogicalPosition = 'top start' | 'top end' | 'bottom start' | 'bottom end' | 'center start'| 'center end';
+export type NbBadgePhysicalPosition =
+  | 'top left'
+  | 'top right'
+  | 'bottom left'
+  | 'bottom right'
+  | 'center right'
+  | 'center left';
+export type NbBadgeLogicalPosition =
+  | 'top start'
+  | 'top end'
+  | 'bottom start'
+  | 'bottom end'
+  | 'center start'
+  | 'center end';
 export type NbBadgePosition = NbBadgePhysicalPosition | NbBadgeLogicalPosition;
 
 export interface NbBadge {
@@ -84,18 +95,38 @@ export interface NbBadge {
  * badge-control-text-color:
  */
 @Component({
-    selector: 'nb-badge',
-    styleUrls: ['./badge.component.scss'],
-    template: `{{dotMode ? '' : text}}`,
-    standalone: false
+  selector: 'nb-badge',
+  styleUrls: ['./badge.component.scss'],
+  standalone: true,
+  imports: [],
+  template: `{{ dotMode() ? '' : text() }}`,
+  host: {
+    '[class.dot-mode]': 'dotMode()',
+    '[class]': 'additionalClasses',
+    '[class.status-primary]': 'status() === "primary"',
+    '[class.status-success]': 'status() === "success"',
+    '[class.status-info]': 'status() === "info"',
+    '[class.status-warning]': 'status() === "warning"',
+    '[class.status-danger]': 'status() === "danger"',
+    '[class.status-basic]': 'status() === "basic"',
+    '[class.status-control]': 'status() === "control"',
+    '[class.position-top]': 'position().includes("top")',
+    '[class.position-right]': 'position().includes("right")',
+    '[class.position-bottom]': 'position().includes("bottom")',
+    '[class.position-left]': 'position().includes("left")',
+    '[class.position-start]': 'position().includes("start")',
+    '[class.position-end]': 'position().includes("end")',
+    '[class.position-center]': 'position().includes("center")',
+  },
 })
-export class NbBadgeComponent implements NbBadge {
+export class NbBadgeComponent {
+  private statusService = inject(NbStatusService);
 
   /**
    * Text to display
    * @type string
    */
-  @Input() text: string = '';
+  public text = input('');
 
   /**
    * Badge position
@@ -105,114 +136,24 @@ export class NbBadgeComponent implements NbBadge {
    * 'top start', 'top end', 'bottom start', 'bottom end'
    * @type string
    */
-  @Input()
-  get position(): NbBadgePosition {
-    return this._position;
-  }
-  set position(value: NbBadgePosition) {
-    this._position = value || this._defaultPosition;
-  }
-  protected _defaultPosition: NbBadgePosition = 'top right';
-  protected _position: NbBadgePosition = this._defaultPosition;
+  public position = input<NbBadgePosition>('top right');
 
   /**
    * Shows badge as a dot. No text is shown.
    * @type boolean
    */
-  @Input()
-  @HostBinding('class.dot-mode')
-  get dotMode(): boolean {
-    return this._dotMode;
-  }
-  set dotMode(value: boolean) {
-    this._dotMode = convertToBoolProperty(value);
-  }
-  protected _dotMode: boolean;
+  public dotMode = input(false, { transform: booleanAttribute });
 
   /**
    * Badge status (adds specific styles):
    * 'basic', 'primary', 'info', 'success', 'warning', 'danger', 'control'
    */
-  @Input() status: NbComponentOrCustomStatus = 'basic';
+  public status = input<NbComponentOrCustomStatus>('basic');
 
-  @HostBinding('class')
-  get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
+  public get additionalClasses(): string[] {
+    if (this.statusService.isCustomStatus(this.status())) {
+      return [this.statusService.getStatusClass(this.status())];
     }
     return [];
-  }
-
-  @HostBinding('class.status-primary')
-  get primary(): boolean {
-    return this.status === 'primary';
-  }
-
-  @HostBinding('class.status-success')
-  get success(): boolean {
-    return this.status === 'success';
-  }
-
-  @HostBinding('class.status-info')
-  get info(): boolean {
-    return this.status === 'info';
-  }
-
-  @HostBinding('class.status-warning')
-  get warning(): boolean {
-    return this.status === 'warning';
-  }
-
-  @HostBinding('class.status-danger')
-  get danger(): boolean {
-    return this.status === 'danger';
-  }
-
-  @HostBinding('class.status-basic')
-  get basic(): boolean {
-    return this.status === 'basic';
-  }
-
-  @HostBinding('class.status-control')
-  get control(): boolean {
-    return this.status === 'control';
-  }
-
-  @HostBinding('class.position-top')
-  get top(): boolean {
-    return this.position.includes('top');
-  }
-
-  @HostBinding('class.position-right')
-  get right(): boolean {
-    return this.position.includes('right');
-  }
-
-  @HostBinding('class.position-bottom')
-  get bottom(): boolean {
-    return this.position.includes('bottom');
-  }
-
-  @HostBinding('class.position-left')
-  get left(): boolean {
-    return this.position.includes('left');
-  }
-
-  @HostBinding('class.position-start')
-  get start(): boolean {
-    return this.position.includes('start');
-  }
-
-  @HostBinding('class.position-end')
-  get end(): boolean {
-    return this.position.includes('end');
-  }
-
-  @HostBinding('class.position-center')
-  get center(): boolean {
-    return this.position.includes('center');
-  }
-
-  constructor(protected statusService: NbStatusService) {
   }
 }

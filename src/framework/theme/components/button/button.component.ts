@@ -4,21 +4,8 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
-import {
-  AfterViewInit,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  HostBinding,
-  HostListener,
-  Input,
-  Renderer2,
-  NgZone,
-} from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, booleanAttribute, effect, input } from '@angular/core';
 
-import { NbStatusService } from '../../services/status.service';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbButton } from './base-button';
 
 /**
@@ -32,7 +19,21 @@ import { NbButton } from './base-button';
  * ```
  * ### Installation
  *
- * Import `NbButtonModule` to your feature module.
+ * Add `NbButtonComponent` to the `imports` array of your standalone component or `NgModule`.
+ *
+ * **Standalone component (recommended):**
+ * ```ts
+ * @Component({
+ *   standalone: true,
+ *   imports: [
+ *     // ...
+ *     NbButtonComponent,
+ *   ],
+ * })
+ * export class MyComponent { }
+ * ```
+ *
+ * **NgModule (legacy):**
  * ```ts
  * @NgModule({
  *   imports: [
@@ -526,65 +527,37 @@ import { NbButton } from './base-button';
  * button-hero-control-disabled-text-color:
  */
 @Component({
-    selector: 'button[nbButton],a[nbButton],input[type="button"][nbButton],input[type="submit"][nbButton]',
-    template: `
-    <ng-content></ng-content>
-  `,
-    providers: [
-        { provide: NbButton, useExisting: NbButtonComponent },
-    ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'button[nbButton],a[nbButton],input[type="button"][nbButton],input[type="submit"][nbButton]',
+  template: ` <ng-content></ng-content> `,
+  providers: [{ provide: NbButton, useExisting: NbButtonComponent }],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [],
+  host: {
+    '[class.appearance-hero]': 'appearance() === "hero"',
+    '[class.status-primary]': 'status() === "primary"',
+    '[class.status-info]': 'status() === "info"',
+    '[class.status-success]': 'status() === "success"',
+    '[class.status-warning]': 'status() === "warning"',
+    '[class.status-danger]': 'status() === "danger"',
+    '[class.status-basic]': 'status() === "basic"',
+    '[class.status-control]': 'status() === "control"',
+    '(click)': 'onClick($event)',
+  },
 })
 export class NbButtonComponent extends NbButton implements AfterViewInit {
   /**
    * Sets `hero` appearance
    */
-  @Input()
-  @HostBinding('class.appearance-hero')
-  get hero(): boolean {
-    return this.appearance === 'hero';
-  }
-  set hero(value: boolean) {
-    if (convertToBoolProperty(value)) {
-      this.appearance = 'hero';
-    }
-  }
-  static ngAcceptInputType_hero: NbBooleanInput;
+  public hero = input(false, { transform: booleanAttribute });
 
-  @HostBinding('class.status-primary')
-  get primary() {
-    return this.status === 'primary';
-  }
-
-  @HostBinding('class.status-info')
-  get info() {
-    return this.status === 'info';
-  }
-
-  @HostBinding('class.status-success')
-  get success() {
-    return this.status === 'success';
-  }
-
-  @HostBinding('class.status-warning')
-  get warning() {
-    return this.status === 'warning';
-  }
-
-  @HostBinding('class.status-danger')
-  get danger() {
-    return this.status === 'danger';
-  }
-
-  @HostBinding('class.status-basic')
-  get basic() {
-    return this.status === 'basic';
-  }
-
-  @HostBinding('class.status-control')
-  get control() {
-    return this.status === 'control';
+  constructor() {
+    super();
+    effect(() => {
+      if (this.hero()) {
+        this.appearance.set('hero');
+      }
+    });
   }
 
   /**
@@ -597,21 +570,10 @@ export class NbButtonComponent extends NbButton implements AfterViewInit {
    * 'clickHandler' will be called before our host listener below. We can't prevent
    * such handlers call.
    */
-  @HostListener('click', ['$event'])
-  onClick(event) {
-    if (this.disabled) {
+  public onClick(event: Event): void {
+    if (this.disabled()) {
       event.preventDefault();
       event.stopImmediatePropagation();
     }
-  }
-
-  constructor(
-    protected renderer: Renderer2,
-    protected hostElement: ElementRef<HTMLElement>,
-    protected cd: ChangeDetectorRef,
-    protected zone: NgZone,
-    protected statusService: NbStatusService,
-  ) {
-    super(renderer, hostElement, cd, zone, statusService);
   }
 }
