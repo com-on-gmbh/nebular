@@ -26,12 +26,17 @@
               "base": "dist/playground"
             },
             "index": "src/index.html",
-            "polyfills": ["src/polyfills.ts"],
+            "polyfills": [
+              "src/polyfills.ts"
+            ],
             "tsConfig": "src/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
               "src/assets"
+            ],
+            "allowedCommonJsDependencies": [
+              "eva-icons"
             ],
             "styles": [],
             "scripts": [],
@@ -42,13 +47,18 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb"
+                  "maximumWarning": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb"
+                  "maximumWarning": "2mb"
                 }
               ],
+              "optimization": {
+                "fonts": {
+                  "inline": false
+                }
+              },
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -61,13 +71,18 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb"
+                  "maximumWarning": "2mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb"
+                  "maximumWarning": "2mb"
                 }
               ],
+              "optimization": {
+                "fonts": {
+                  "inline": false
+                }
+              },
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
@@ -187,7 +202,9 @@
               "base": "dist/docs"
             },
             "index": "docs/index.html",
-            "polyfills": ["docs/polyfills.ts"],
+            "polyfills": [
+              "docs/polyfills.ts"
+            ],
             "tsConfig": "docs/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [

@@ -2,12 +2,22 @@
 @use '../../theming' as *;
 
 @mixin nb-typography {
-  #{if(&, '&', 'body')} {
-    color: nb-theme(text-basic-color);
-    font-family: nb-theme(text-paragraph-font-family);
-    font-size: nb-theme(text-paragraph-font-size);
-    font-weight: nb-theme(text-paragraph-font-weight);
-    line-height: nb-theme(text-paragraph-line-height);
+  @if & {
+    & {
+      color: nb-theme(text-basic-color);
+      font-family: nb-theme(text-paragraph-font-family);
+      font-size: nb-theme(text-paragraph-font-size);
+      font-weight: nb-theme(text-paragraph-font-weight);
+      line-height: nb-theme(text-paragraph-line-height);
+    }
+  } @else {
+    body {
+      color: nb-theme(text-basic-color);
+      font-family: nb-theme(text-paragraph-font-family);
+      font-size: nb-theme(text-paragraph-font-size);
+      font-weight: nb-theme(text-paragraph-font-weight);
+      line-height: nb-theme(text-paragraph-line-height);
+    }
   }
 
   h1,

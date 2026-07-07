@@ -1,26 +1,10 @@
 import {
-  Attribute,
-  ChangeDetectorRef,
-  ElementRef,
-  Inject,
-  IterableDiffers,
-  NgModule,
-  Component,
-  Optional,
-  SkipSelf,
-} from '@angular/core';
-import {
   CdkTable,
   CdkTableModule,
-  StickyPositioningListener
 } from '@angular/cdk/table';
+import { Component, NgModule } from '@angular/core';
 
 import { NbBidiModule } from '../bidi/bidi.module';
-import { NbDirectionality } from '../bidi/bidi-service';
-import { NbPlatform } from '../platform/platform-service';
-import { NB_DOCUMENT } from '../../../theme.options';
-import { NbViewportRulerAdapter } from '../adapter/viewport-ruler-adapter';
-import { NB_STICKY_POSITIONING_LISTENER } from '../../cdk/table/type-mappings';
 import {
   NbCellDefDirective,
   NbCellDirective,
@@ -33,15 +17,15 @@ import {
 import {
   NbCellOutletDirective,
   NbDataRowOutletDirective,
-  NbFooterRowOutletDirective,
-  NbHeaderRowOutletDirective,
   NbFooterRowComponent,
   NbFooterRowDefDirective,
+  NbFooterRowOutletDirective,
   NbHeaderRowComponent,
   NbHeaderRowDefDirective,
+  NbHeaderRowOutletDirective,
+  NbNoDataRowOutletDirective,
   NbRowComponent,
   NbRowDefDirective,
-  NbNoDataRowOutletDirective,
 } from './row';
 
 export const NB_TABLE_TEMPLATE = `
@@ -52,27 +36,12 @@ export const NB_TABLE_TEMPLATE = `
 `;
 
 @Component({
-    selector: 'nb-table-not-implemented',
-    template: ``,
-    standalone: false,
+  selector: 'nb-table-not-implemented',
+  template: ``,
+  standalone: false,
 })
 // eslint-disable-next-line @angular-eslint/component-class-suffix
 export class NbTable<T> extends CdkTable<T> {
-  constructor(
-    differs: IterableDiffers,
-    changeDetectorRef: ChangeDetectorRef,
-    elementRef: ElementRef,
-    @Attribute('role') role: string,
-    dir: NbDirectionality,
-    @Inject(NB_DOCUMENT) document: any,
-    platform: NbPlatform,
-    _viewportRuler: NbViewportRulerAdapter,
-    @Optional() @SkipSelf() @Inject(NB_STICKY_POSITIONING_LISTENER)
-    protected readonly _stickyPositioningListener: StickyPositioningListener,
-  ) {
-    super(differs, changeDetectorRef, elementRef, role, dir, document, platform, _viewportRuler,
-          _stickyPositioningListener);
-  }
 }
 
 const COMPONENTS = [
@@ -106,8 +75,8 @@ const COMPONENTS = [
 ];
 
 @NgModule({
-  imports: [ NbBidiModule ],
-  declarations: [ ...COMPONENTS ],
-  exports: [ ...COMPONENTS ],
+  imports: [NbBidiModule],
+  declarations: [...COMPONENTS],
+  exports: [...COMPONENTS],
 })
-export class NbTableModule extends CdkTableModule {}
+export class NbTableModule extends CdkTableModule { }

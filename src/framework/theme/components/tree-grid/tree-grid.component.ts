@@ -4,50 +4,42 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
+import { CDK_TABLE } from '@angular/cdk/table';
 import {
   AfterViewInit,
-  Attribute,
-  ChangeDetectorRef,
   Component,
-  ElementRef,
+  EmbeddedViewRef,
   HostBinding,
   Inject,
   Input,
-  IterableDiffers,
   OnDestroy,
   QueryList,
-  EmbeddedViewRef,
   ViewContainerRef,
-  Optional,
-  SkipSelf,
 } from '@angular/core';
-import { CDK_TABLE } from '@angular/cdk/table';
 import { fromEvent, merge, Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
-import { NB_DOCUMENT, NB_WINDOW } from '../../theme.options';
+import { NB_WINDOW } from '../../theme.options';
 import { NbPlatform } from '../cdk/platform/platform-service';
-import { NbDirectionality } from '../cdk/bidi/bidi-service';
 import {
   NB_TABLE_TEMPLATE,
   NbTable
 } from '../cdk/table/table.module';
-import { NB_STICKY_POSITIONING_LISTENER, NbRowContext } from '../cdk/table/type-mappings';
-import { NbViewportRulerAdapter } from '../cdk/adapter/viewport-ruler-adapter';
+import { NbRowContext } from '../cdk/table/type-mappings';
+import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbTreeGridDataSource, NbTreeGridDataSourceBuilder } from './data-source/tree-grid-data-source';
 import { NB_DEFAULT_ROW_LEVEL, NbTreeGridPresentationNode } from './data-source/tree-grid.model';
 import { NbToggleOptions } from './data-source/tree-grid.service';
-import { NB_TREE_GRID } from './tree-grid-injection-tokens';
-import { NbTreeGridRowComponent } from './tree-grid-row.component';
 import { NbTreeGridCellDirective } from './tree-grid-cell.component';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbTreeGridColumnDefDirective } from './tree-grid-column-def.directive';
+import { NbColumnsService } from './tree-grid-columns.service';
 import {
   NbTreeGridFooterRowDefDirective,
   NbTreeGridHeaderRowDefDirective,
   NbTreeGridRowDefDirective,
 } from './tree-grid-def.component';
-import { NbColumnsService } from './tree-grid-columns.service';
+import { NB_TREE_GRID } from './tree-grid-injection-tokens';
+import { NbTreeGridRowComponent } from './tree-grid-row.component';
 
 /**
  * Tree grid component that can be used to display nested rows of data.
@@ -136,34 +128,24 @@ import { NbColumnsService } from './tree-grid-columns.service';
  * tree-grid-sort-header-button-padding:
  */
 @Component({
-    selector: 'table[nbTreeGrid]',
-    template: NB_TABLE_TEMPLATE,
-    styleUrls: ['./tree-grid.component.scss'],
-    providers: [
-        { provide: NB_TREE_GRID, useExisting: NbTreeGridComponent },
-        { provide: CDK_TABLE, useExisting: NbTreeGridComponent },
-        NbColumnsService,
-    ],
-    standalone: false
+  selector: 'table[nbTreeGrid]',
+  template: NB_TABLE_TEMPLATE,
+  styleUrls: ['./tree-grid.component.scss'],
+  providers: [
+    { provide: NB_TREE_GRID, useExisting: NbTreeGridComponent },
+    { provide: CDK_TABLE, useExisting: NbTreeGridComponent },
+    NbColumnsService,
+  ],
+  standalone: false
 })
 export class NbTreeGridComponent<T> extends NbTable<NbTreeGridPresentationNode<T>>
-                                    implements AfterViewInit, OnDestroy {
+  implements AfterViewInit, OnDestroy {
 
   constructor(private dataSourceBuilder: NbTreeGridDataSourceBuilder<T>,
-              differs: IterableDiffers,
-              changeDetectorRef: ChangeDetectorRef,
-              elementRef: ElementRef,
-              @Attribute('role') role: string,
-              dir: NbDirectionality,
-              @Inject(NB_DOCUMENT) document,
-              platform: NbPlatform,
-              @Inject(NB_WINDOW) private window,
-              _viewportRuler: NbViewportRulerAdapter,
-              @Optional() @SkipSelf() @Inject(NB_STICKY_POSITIONING_LISTENER)
-              protected readonly _stickyPositioningListener,
+    platform: NbPlatform,
+    @Inject(NB_WINDOW) private window,
   ) {
-    super(differs, changeDetectorRef, elementRef, role, dir, document, platform, _viewportRuler,
-          _stickyPositioningListener);
+    super();
     this.platform = platform;
   }
 

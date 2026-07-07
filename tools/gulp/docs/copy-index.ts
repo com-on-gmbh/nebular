@@ -37,7 +37,7 @@ function mkDirByPathSync(targetDir) {
     const curDir = resolve('.', parentDir, childDir);
     try {
       mkdirSync(curDir);
-    } catch (err) {
+    } catch (err: any) {
       if (err.code !== 'EEXIST') {
         throw err;
       }

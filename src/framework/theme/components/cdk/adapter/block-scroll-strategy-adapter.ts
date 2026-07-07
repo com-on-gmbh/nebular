@@ -1,5 +1,5 @@
-import { Inject, Injectable, NgZone } from '@angular/core';
 import { BlockScrollStrategy, ScrollDispatcher, ScrollStrategyOptions } from '@angular/cdk/overlay';
+import { Inject, Injectable, NgZone } from '@angular/core';
 
 import { NbLayoutScrollService } from '../../../services/scroll.service';
 import { NB_DOCUMENT } from '../../../theme.options';
@@ -13,8 +13,8 @@ import { NbViewportRulerAdapter } from './viewport-ruler-adapter';
 @Injectable()
 export class NbBlockScrollStrategyAdapter extends BlockScrollStrategy {
   constructor(@Inject(NB_DOCUMENT) document: any,
-              viewportRuler: NbViewportRulerAdapter,
-              protected scrollService: NbLayoutScrollService) {
+    viewportRuler: NbViewportRulerAdapter,
+    protected scrollService: NbLayoutScrollService) {
     super(viewportRuler, document);
   }
 
@@ -32,11 +32,11 @@ export class NbBlockScrollStrategyAdapter extends BlockScrollStrategy {
 @Injectable()
 export class NbScrollStrategyOptions extends ScrollStrategyOptions {
   constructor(protected scrollService: NbLayoutScrollService,
-              protected scrollDispatcher: ScrollDispatcher,
-              protected viewportRuler: NbViewportRulerAdapter,
-              protected ngZone: NgZone,
-              @Inject(NB_DOCUMENT) protected document) {
-    super(scrollDispatcher, viewportRuler, ngZone, document);
+    protected scrollDispatcher: ScrollDispatcher,
+    protected viewportRuler: NbViewportRulerAdapter,
+    protected ngZone: NgZone,
+    @Inject(NB_DOCUMENT) protected document) {
+    super();
   }
 
   block = () => new NbBlockScrollStrategyAdapter(this.document, this.viewportRuler, this.scrollService);

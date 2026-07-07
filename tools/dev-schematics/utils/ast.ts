@@ -15,10 +15,10 @@ import { getNodeIndentation } from './formatting';
  * Returns all exported and named class declarations with a given decorator.
  */
 export function getClassWithDecorator(tree: Tree, path: Path, decoratorName: string): ts.ClassDeclaration[] {
-  return findNodes(parseSourceFile(tree, path), ts.SyntaxKind.ClassDeclaration)
-    .filter((node) => isNodeExported(node as ts.Declaration))
-    .filter((node) => (node as ts.ClassDeclaration).name != null)
-    .filter((node: ts.ClassDeclaration) => hasDecoratorCall(node, decoratorName)) as ts.ClassDeclaration[];
+  return (findNodes(parseSourceFile(tree, path), ts.SyntaxKind.ClassDeclaration) as any[])
+    .filter((node: any) => isNodeExported(node as ts.Declaration))
+    .filter((node: any) => (node as ts.ClassDeclaration).name != null)
+    .filter((node: any) => hasDecoratorCall(node as ts.ClassDeclaration, decoratorName)) as ts.ClassDeclaration[];
 }
 
 /**
@@ -51,9 +51,9 @@ export function isNodeExported(node: ts.Declaration): boolean {
 }
 
 export function findDeclarationByIdentifier(source: ts.SourceFile, identifierText: string): ts.VariableDeclaration {
-  return getSourceNodes(source)
-    .filter((node) => node.kind === ts.SyntaxKind.VariableDeclaration)
-    .find((node: ts.VariableDeclaration) => node.name.getText() === identifierText) as ts.VariableDeclaration;
+  return (getSourceNodes(source) as any[])
+    .filter((node: any) => node.kind === ts.SyntaxKind.VariableDeclaration)
+    .find((node: any) => (node as ts.VariableDeclaration).name.getText() === identifierText) as ts.VariableDeclaration;
 }
 
 export function addObjectProperty(
