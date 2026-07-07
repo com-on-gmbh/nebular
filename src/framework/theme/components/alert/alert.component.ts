@@ -4,13 +4,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
-import { Component, Input, HostBinding, Output, EventEmitter } from '@angular/core';
+import { Component, booleanAttribute, inject, input, output } from '@angular/core';
 
 import { NbStatusService } from '../../services/status.service';
 import { NbComponentSize } from '../component-size';
 import { NbComponentOrCustomStatus, NbComponentStatus } from '../component-status';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
-
 
 /**
  * Alert component.
@@ -27,7 +25,19 @@ import { convertToBoolProperty, NbBooleanInput } from '../helpers';
  * ```
  * ### Installation
  *
- * Import `NbAlertModule` to your feature module.
+ * Standalone (recommended):
+ * ```ts
+ * @Component({
+ *   standalone: true,
+ *   imports: [
+ *     // ...
+ *     NbAlertComponent,
+ *   ],
+ * })
+ * export class MyComponent { }
+ * ```
+ *
+ * NgModule (legacy):
  * ```ts
  * @NgModule({
  *   imports: [
@@ -109,209 +119,100 @@ import { convertToBoolProperty, NbBooleanInput } from '../helpers';
  * alert-outline-control-color:
  */
 @Component({
-    selector: 'nb-alert',
-    styleUrls: ['./alert.component.scss'],
-    template: `
-    <button *ngIf="closable" type="button" class="close" aria-label="Close" (click)="onClose()">
+  selector: 'nb-alert',
+  standalone: true,
+  imports: [],
+  styleUrls: ['./alert.component.scss'],
+  template: `
+    @if (closable()) {
+    <button type="button" class="close" aria-label="Close" (click)="onClose()">
       <span aria-hidden="true">&times;</span>
     </button>
+    }
     <ng-content></ng-content>
   `,
-    standalone: false
+  host: {
+    '[class.closable]': 'closable()',
+    '[class.size-tiny]': 'size() === "tiny"',
+    '[class.size-small]': 'size() === "small"',
+    '[class.size-medium]': 'size() === "medium"',
+    '[class.size-large]': 'size() === "large"',
+    '[class.size-giant]': 'size() === "giant"',
+    '[class.status-primary]': 'status() === "primary"',
+    '[class.status-success]': 'status() === "success"',
+    '[class.status-info]': 'status() === "info"',
+    '[class.status-warning]': 'status() === "warning"',
+    '[class.status-danger]': 'status() === "danger"',
+    '[class.status-basic]': 'status() === "basic"',
+    '[class.status-control]': 'status() === "control"',
+    '[class.accent-primary]': 'accent() === "primary"',
+    '[class.accent-success]': 'accent() === "success"',
+    '[class.accent-info]': 'accent() === "info"',
+    '[class.accent-warning]': 'accent() === "warning"',
+    '[class.accent-danger]': 'accent() === "danger"',
+    '[class.accent-basic]': 'accent() === "basic"',
+    '[class.accent-control]': 'accent() === "control"',
+    '[class.outline-primary]': 'outline() === "primary"',
+    '[class.outline-success]': 'outline() === "success"',
+    '[class.outline-info]': 'outline() === "info"',
+    '[class.outline-warning]': 'outline() === "warning"',
+    '[class.outline-danger]': 'outline() === "danger"',
+    '[class.outline-basic]': 'outline() === "basic"',
+    '[class.outline-control]': 'outline() === "control"',
+    '[class]': 'additionalClasses',
+  },
 })
 export class NbAlertComponent {
-
   /**
    * Alert size, available sizes:
    * `tiny`, `small`, `medium`, `large`, `giant`
    * Unset by default.
    */
-  @Input() size: '' | NbComponentSize = '';
+  public size = input<'' | NbComponentSize>('');
 
   /**
    * Alert status (adds specific styles):
    * `basic` (default), `primary`, `success`, `info`, `warning`, `danger`, `control`.
    */
-  @Input() status: NbComponentOrCustomStatus = 'basic';
+  public status = input<NbComponentOrCustomStatus>('basic');
 
   /**
    * Alert accent (color of the top border):
    * `basic`, `primary`, `success`, `info`, `warning`, `danger`, `control`.
    * Unset by default.
    */
-  @Input() accent: '' | NbComponentStatus = '';
+  public accent = input<'' | NbComponentStatus>('');
 
   /**
    * Alert outline (color of the border):
    * `basic`, `primary`, `success`, `info`, `warning`, `danger`, `control`.
    * Unset by default.
    */
-  @Input() outline: '' | NbComponentStatus = '';
+  public outline = input<'' | NbComponentStatus>('');
 
   /**
    * Shows `close` icon
    */
-  @Input()
-  @HostBinding('class.closable')
-  get closable(): boolean {
-    return this._closable;
-  }
-  set closable(value: boolean) {
-    this._closable = convertToBoolProperty(value);
-  }
-  protected _closable: boolean = false;
-  static ngAcceptInputType_closable: NbBooleanInput;
+  public closable = input(false, { transform: booleanAttribute });
 
   /**
    * Emits when chip is removed
    * @type EventEmitter<any>
    */
-  @Output() close = new EventEmitter();
+  public close = output<void>();
 
-  constructor(protected statusService: NbStatusService) {
-  }
+  protected statusService = inject(NbStatusService);
 
   /**
    * Emits the removed chip event
    */
-  onClose() {
+  public onClose(): void {
     this.close.emit();
   }
 
-  @HostBinding('class.size-tiny')
-  get tiny() {
-    return this.size === 'tiny';
-  }
-
-  @HostBinding('class.size-small')
-  get small() {
-    return this.size === 'small';
-  }
-
-  @HostBinding('class.size-medium')
-  get medium() {
-    return this.size === 'medium';
-  }
-
-  @HostBinding('class.size-large')
-  get large() {
-    return this.size === 'large';
-  }
-
-  @HostBinding('class.size-giant')
-  get giant() {
-    return this.size === 'giant';
-  }
-
-  @HostBinding('class.status-primary')
-  get primary() {
-    return this.status === 'primary';
-  }
-
-  @HostBinding('class.status-success')
-  get success() {
-    return this.status === 'success';
-  }
-
-  @HostBinding('class.status-info')
-  get info() {
-    return this.status === 'info';
-  }
-
-  @HostBinding('class.status-warning')
-  get warning() {
-    return this.status === 'warning';
-  }
-
-  @HostBinding('class.status-danger')
-  get danger() {
-    return this.status === 'danger';
-  }
-
-  @HostBinding('class.status-basic')
-  get basic() {
-    return this.status === 'basic';
-  }
-
-  @HostBinding('class.status-control')
-  get control() {
-    return this.status === 'control';
-  }
-
-  @HostBinding('class.accent-primary')
-  get primaryAccent() {
-    return this.accent === 'primary';
-  }
-
-  @HostBinding('class.accent-success')
-  get successAccent() {
-    return this.accent === 'success';
-  }
-
-  @HostBinding('class.accent-info')
-  get infoAccent() {
-    return this.accent === 'info';
-  }
-
-  @HostBinding('class.accent-warning')
-  get warningAccent() {
-    return this.accent === 'warning';
-  }
-
-  @HostBinding('class.accent-danger')
-  get dangerAccent() {
-    return this.accent === 'danger';
-  }
-
-  @HostBinding('class.accent-basic')
-  get basicAccent() {
-    return this.accent === 'basic';
-  }
-
-  @HostBinding('class.accent-control')
-  get controlAccent() {
-    return this.accent === 'control';
-  }
-
-  @HostBinding('class.outline-primary')
-  get primaryOutline() {
-    return this.outline === 'primary';
-  }
-
-  @HostBinding('class.outline-success')
-  get successOutline() {
-    return this.outline === 'success';
-  }
-
-  @HostBinding('class.outline-info')
-  get infoOutline() {
-    return this.outline === 'info';
-  }
-
-  @HostBinding('class.outline-warning')
-  get warningOutline() {
-    return this.outline === 'warning';
-  }
-
-  @HostBinding('class.outline-danger')
-  get dangerOutline() {
-    return this.outline === 'danger';
-  }
-
-  @HostBinding('class.outline-basic')
-  get basicOutline() {
-    return this.outline === 'basic';
-  }
-
-  @HostBinding('class.outline-control')
-  get controlOutline() {
-    return this.outline === 'control';
-  }
-
-  @HostBinding('class')
-  get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
+  public get additionalClasses(): string[] {
+    if (this.statusService.isCustomStatus(this.status())) {
+      return [this.statusService.getStatusClass(this.status())];
     }
     return [];
   }

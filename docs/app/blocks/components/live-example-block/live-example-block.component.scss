@@ -1,5 +1,9 @@
 @use '../../../@theme/styles/themes' as *;
 
+:host([hidden]) {
+  display: none !important;
+}
+
 @include nb-install-component() {
   // TODO: move some variables in Nebular themes
   // colors

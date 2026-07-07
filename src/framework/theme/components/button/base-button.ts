@@ -1,247 +1,208 @@
 import {
-  AfterContentChecked,
   AfterViewInit,
   ChangeDetectorRef,
-  ContentChildren,
   Directive,
   ElementRef,
   EmbeddedViewRef,
-  HostBinding,
-  Input,
   NgZone,
-  QueryList,
   Renderer2,
+  booleanAttribute,
+  contentChildren,
+  effect,
+  inject,
+  input,
+  linkedSignal,
 } from '@angular/core';
 
 import { NbStatusService } from '../../services/status.service';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
+import { NbComponentShape } from '../component-shape';
 import { NbComponentSize } from '../component-size';
 import { NbComponentOrCustomStatus } from '../component-status';
-import { NbComponentShape } from '../component-shape';
 import { NbIconComponent } from '../icon/icon.component';
 
 export type NbButtonAppearance = 'filled' | 'outline' | 'ghost' | 'hero';
 
-export type NbButtonProperties = Pick<NbButton, 'appearance' | 'size' | 'shape' | 'status' | 'disabled'> & Object;
+export interface NbButtonProperties {
+  appearance?: NbButtonAppearance;
+  size?: NbComponentSize;
+  shape?: NbComponentShape;
+  status?: NbComponentOrCustomStatus;
+  disabled?: boolean;
+}
 
-@Directive()
+@Directive({
+  standalone: true,
+  host: {
+    '[class.appearance-filled]': 'appearance() === "filled"',
+    '[class.appearance-outline]': 'appearance() === "outline"',
+    '[class.appearance-ghost]': 'appearance() === "ghost"',
+    '[class.full-width]': 'fullWidth()',
+    '[attr.aria-disabled]': 'disabled()',
+    '[class.btn-disabled]': 'disabled()',
+    '[attr.tabindex]': 'tabbable',
+    '[class.size-tiny]': 'size() === "tiny"',
+    '[class.size-small]': 'size() === "small"',
+    '[class.size-medium]': 'size() === "medium"',
+    '[class.size-large]': 'size() === "large"',
+    '[class.size-giant]': 'size() === "giant"',
+    '[class.shape-rectangle]': 'shape() === "rectangle"',
+    '[class.shape-round]': 'shape() === "round"',
+    '[class.shape-semi-round]': 'shape() === "semi-round"',
+    '[class.icon-start]': 'iconLeft',
+    '[class.icon-end]': 'iconRight',
+    '[class]': 'additionalClasses',
+  },
+})
 // eslint-disable-next-line @angular-eslint/directive-class-suffix
-export abstract class NbButton implements AfterContentChecked, AfterViewInit {
+export abstract class NbButton implements AfterViewInit {
+  // Internal input aliases — linked to writable signals so updateProperties() and subclass effects can overwrite them
+  protected _sizeInput = input<NbComponentSize>('medium', { alias: 'size' });
+  protected _statusInput = input<NbComponentOrCustomStatus>('basic', { alias: 'status' });
+  protected _shapeInput = input<NbComponentShape>('rectangle', { alias: 'shape' });
+  protected _appearanceInput = input<NbButtonAppearance>('filled', { alias: 'appearance' });
+  protected _disabledInput = input(false, { alias: 'disabled', transform: booleanAttribute });
+
   /**
    * Button size, available sizes:
    * `tiny`, `small`, `medium`, `large`, `giant`
    */
-  @Input() size: NbComponentSize = 'medium';
+  public size = linkedSignal<NbComponentSize>(() => this._sizeInput());
 
   /**
    * Button status (adds specific styles):
    * `primary`, `info`, `success`, `warning`, `danger`
    */
-  @Input() status: NbComponentOrCustomStatus = 'basic';
+  public status = linkedSignal<NbComponentOrCustomStatus>(() => this._statusInput());
 
   /**
    * Button shapes: `rectangle`, `round`, `semi-round`
    */
-  @Input() shape: NbComponentShape = 'rectangle';
+  public shape = linkedSignal<NbComponentShape>(() => this._shapeInput());
 
   /**
    * Button appearance: `filled`, `outline`, `ghost`, `hero`
    */
-  @Input() appearance: NbButtonAppearance = 'filled';
+  public appearance = linkedSignal<NbButtonAppearance>(() => this._appearanceInput());
 
   /**
    * Sets `filled` appearance
    */
-  @Input()
-  @HostBinding('class.appearance-filled')
-  get filled(): boolean {
-    return this.appearance === 'filled';
-  }
-  set filled(value: boolean) {
-    if (convertToBoolProperty(value)) {
-      this.appearance = 'filled';
-    }
-  }
-  static ngAcceptInputType_filled: NbBooleanInput;
+  public filled = input(false, { transform: booleanAttribute });
 
   /**
    * Sets `outline` appearance
    */
-  @Input()
-  @HostBinding('class.appearance-outline')
-  get outline(): boolean {
-    return this.appearance === 'outline';
-  }
-  set outline(value: boolean) {
-    if (convertToBoolProperty(value)) {
-      this.appearance = 'outline';
-    }
-  }
-  static ngAcceptInputType_outline: NbBooleanInput;
+  public outline = input(false, { transform: booleanAttribute });
 
   /**
    * Sets `ghost` appearance
    */
-  @Input()
-  @HostBinding('class.appearance-ghost')
-  get ghost(): boolean {
-    return this.appearance === 'ghost';
-  }
-  set ghost(value: boolean) {
-    if (convertToBoolProperty(value)) {
-      this.appearance = 'ghost';
-    }
-  }
-  static ngAcceptInputType_ghost: NbBooleanInput;
+  public ghost = input(false, { transform: booleanAttribute });
 
   /**
    * If set element will fill its container
    */
-  @Input()
-  @HostBinding('class.full-width')
-  get fullWidth(): boolean {
-    return this._fullWidth;
-  }
-  set fullWidth(value: boolean) {
-    this._fullWidth = convertToBoolProperty(value);
-  }
-  private _fullWidth = false;
-  static ngAcceptInputType_fullWidth: NbBooleanInput;
+  public fullWidth = input(false, { transform: booleanAttribute });
 
   /**
    * Disables the button
    */
-  @Input()
-  @HostBinding('attr.aria-disabled')
-  @HostBinding('class.btn-disabled')
-  get disabled(): boolean {
-    return this._disabled;
-  }
-  set disabled(value: boolean) {
-    if (this.disabled !== convertToBoolProperty(value)) {
-      this._disabled = !this.disabled;
-      this.renderer.setProperty(this.hostElement.nativeElement, 'disabled', this.disabled);
-    }
-  }
-  private _disabled: boolean = false;
-  static ngAcceptInputType_disabled: NbBooleanInput;
+  public disabled = linkedSignal<boolean>(() => this._disabledInput());
 
   /**
    * Tabindex of the button.
    */
-  @Input() tabIndex: number;
+  public tabIndex = input<number | undefined>(undefined);
 
   // issue #794
-  @HostBinding('attr.tabindex')
-  get tabbable(): string {
-    if (this.disabled) {
+  public get tabbable(): string {
+    if (this.disabled()) {
       return '-1';
     }
 
-    if (this.tabIndex == null) {
+    if (this.tabIndex() == null) {
       return '0';
     }
 
-    return this.tabIndex.toString();
+    return this.tabIndex()!.toString();
   }
 
-  @HostBinding('class.size-tiny')
-  get tiny() {
-    return this.size === 'tiny';
-  }
+  public iconLeft = false;
+  public iconRight = false;
 
-  @HostBinding('class.size-small')
-  get small() {
-    return this.size === 'small';
-  }
-
-  @HostBinding('class.size-medium')
-  get medium() {
-    return this.size === 'medium';
-  }
-
-  @HostBinding('class.size-large')
-  get large() {
-    return this.size === 'large';
-  }
-
-  @HostBinding('class.size-giant')
-  get giant() {
-    return this.size === 'giant';
-  }
-
-  @HostBinding('class.shape-rectangle')
-  get rectangle() {
-    return this.shape === 'rectangle';
-  }
-
-  @HostBinding('class.shape-round')
-  get round() {
-    return this.shape === 'round';
-  }
-
-  @HostBinding('class.shape-semi-round')
-  get semiRound() {
-    return this.shape === 'semi-round';
-  }
-
-  @HostBinding('class.icon-start') iconLeft = false;
-
-  @HostBinding('class.icon-end') iconRight = false;
-
-  @HostBinding('class')
-  get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
+  public get additionalClasses(): string[] {
+    if (this.statusService.isCustomStatus(this.status())) {
+      return [this.statusService.getStatusClass(this.status())];
     }
     return [];
   }
 
-  @ContentChildren(NbIconComponent, { read: ElementRef }) icons: QueryList<ElementRef>;
+  public icons = contentChildren(NbIconComponent, { read: ElementRef });
 
-  protected constructor(
-    protected renderer: Renderer2,
-    protected hostElement: ElementRef<HTMLElement>,
-    protected cd: ChangeDetectorRef,
-    protected zone: NgZone,
-    protected statusService: NbStatusService,
-  ) {
+  protected renderer = inject(Renderer2);
+  protected hostElement = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected cd = inject(ChangeDetectorRef);
+  protected zone = inject(NgZone);
+  protected statusService = inject(NbStatusService);
+
+  protected constructor() {
+    effect(() => {
+      if (this.filled()) {
+        this.appearance.set('filled');
+      }
+    });
+    effect(() => {
+      if (this.outline()) {
+        this.appearance.set('outline');
+      }
+    });
+    effect(() => {
+      if (this.ghost()) {
+        this.appearance.set('ghost');
+      }
+    });
+    effect(() => {
+      this.renderer.setProperty(this.hostElement.nativeElement, 'disabled', this.disabled());
+    });
+    effect(() => {
+      const icons = this.icons();
+      const nodes = this.nodes;
+      this.iconLeft = nodes.length > 0 ? this.isIconExist(nodes[0]) : false;
+      this.iconRight = nodes.length > 0 ? this.isIconExist(nodes[nodes.length - 1]) : false;
+    });
   }
 
-  ngAfterContentChecked() {
-    const firstNode = this.nodes[0];
-    const lastNode = this.nodes[this.nodes.length - 1];
-
-    this.iconLeft = this.isIconExist(firstNode);
-    this.iconRight = this.isIconExist(lastNode);
-  }
-
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     // TODO: #2254
-    this.zone.runOutsideAngular(() => setTimeout(() => {
-      this.renderer.addClass(this.hostElement.nativeElement, 'nb-transition');
-    }));
+    this.zone.runOutsideAngular(() =>
+      setTimeout(() => {
+        this.renderer.addClass(this.hostElement.nativeElement, 'nb-transition');
+      }),
+    );
   }
 
   /**
    * @docs-private
    **/
-  updateProperties(config: Partial<NbButtonProperties>) {
-    let isPropertyChanged = false;
-
-    for (const key in config) {
-      if (config.hasOwnProperty(key) && this[key] !== config[key]) {
-        this[key] = config[key];
-        isPropertyChanged = true;
-      }
+  public updateProperties(config: Partial<NbButtonProperties>): void {
+    if (config.appearance !== undefined) {
+      this.appearance.set(config.appearance);
     }
-
-    if (isPropertyChanged) {
-      this.cd.markForCheck();
+    if (config.size !== undefined) {
+      this.size.set(config.size);
+    }
+    if (config.shape !== undefined) {
+      this.shape.set(config.shape);
+    }
+    if (config.status !== undefined) {
+      this.status.set(config.status);
+    }
+    if (config.disabled !== undefined) {
+      this.disabled.set(config.disabled);
     }
   }
 
-  get iconElement() {
+  public get iconElement(): Element | null {
     const el = this.hostElement.nativeElement;
     return el.querySelector('nb-icon');
   }
@@ -251,6 +212,6 @@ export abstract class NbButton implements AfterContentChecked, AfterViewInit {
   }
 
   protected isIconExist(node: Node): boolean {
-    return this.icons.some((item) => item.nativeElement === node);
+    return this.icons().some((item: ElementRef) => item.nativeElement === node);
   }
 }
