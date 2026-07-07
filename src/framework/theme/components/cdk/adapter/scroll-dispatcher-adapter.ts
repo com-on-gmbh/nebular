@@ -1,4 +1,4 @@
-import { Inject, Injectable, NgZone } from '@angular/core';
+import { Inject, Injectable, NgZone, Injector } from '@angular/core';
 import { CdkScrollable, ScrollDispatcher } from '@angular/cdk/overlay';
 import { merge, Observable } from 'rxjs';
 
@@ -11,8 +11,9 @@ export class NbScrollDispatcherAdapter extends ScrollDispatcher {
   constructor(ngZone: NgZone,
               platform: NbPlatform,
               protected scrollService: NbLayoutScrollService,
-              @Inject(NB_DOCUMENT) document: any) {
-    super(ngZone, platform, document);
+              @Inject(NB_DOCUMENT) document: any,
+              injector: Injector) {
+    super(injector);
   }
 
   scrolled(auditTimeInMs?: number): Observable<CdkScrollable | void> {

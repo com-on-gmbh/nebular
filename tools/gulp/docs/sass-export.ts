@@ -114,7 +114,7 @@ class SassExportFunction {
     return result;
   }
 
-  getParent(prop, scopedThemeName, resultThemeName, resultProp, resultObj, THEMES) {
+  getParent(prop: any, scopedThemeName: any, resultThemeName: any, resultProp: any, resultObj: any, THEMES: any): any {
     const scopedTheme = THEMES[scopedThemeName].data;
     const scopedParent = THEMES[scopedThemeName].parent;
     const value = scopedTheme[prop];
@@ -138,7 +138,7 @@ class SassExportFunction {
     return resultObj;
   }
 
-  linkProps(resultObj, parentThemeName, parentPropName, childThemeName, childPropName) {
+  linkProps(resultObj: any, parentThemeName: any, parentPropName: any, childThemeName: any, childPropName: any): void {
     if (!resultObj.hasOwnProperty(parentThemeName)) {
       resultObj[parentThemeName].data = {};
       resultObj[parentThemeName].data[parentPropName] = new Prop(parentPropName);

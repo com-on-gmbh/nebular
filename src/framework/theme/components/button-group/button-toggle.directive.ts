@@ -86,38 +86,45 @@ export class NbButtonToggleDirective extends NbButton {
 
   @HostBinding('class.status-primary')
   get primary(): boolean {
-    return this.pressed && (this.status === 'basic' || this.status === 'primary');
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && (statusValue === 'basic' || statusValue === 'primary');
   }
 
   @HostBinding('class.status-success')
   get success(): boolean {
-    return this.pressed && this.status === 'success';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'success';
   }
 
   @HostBinding('class.status-info')
   get info(): boolean {
-    return this.pressed && this.status === 'info';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'info';
   }
 
   @HostBinding('class.status-warning')
   get warning(): boolean {
-    return this.pressed && this.status === 'warning';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'warning';
   }
 
   @HostBinding('class.status-danger')
   get danger(): boolean {
-    return this.pressed && this.status === 'danger';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'danger';
   }
 
   @HostBinding('class.status-control')
   get control(): boolean {
-    return this.pressed && this.status === 'control';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'control';
   }
 
   @HostBinding('class')
   get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    if (this.statusService.isCustomStatus(statusValue)) {
+      return [this.statusService.getStatusClass(statusValue)];
     }
     return [];
   }
