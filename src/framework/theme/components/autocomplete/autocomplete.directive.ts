@@ -13,6 +13,7 @@ import {
   forwardRef,
   inject,
   input,
+  linkedSignal,
   OnDestroy,
   QueryList,
   Renderer2,
@@ -129,9 +130,9 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
 
   protected destroy$: Subject<void> = new Subject<void>();
 
-  protected _onChange: (value: T) => void = () => {};
+  protected _onChange: (value: T) => void = () => { };
 
-  protected _onTouched = () => {};
+  protected _onTouched = () => { };
 
   /**
    * Determines is autocomplete overlay opened.
@@ -162,7 +163,8 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
    **/
   public scrollStrategy = input<NbScrollStrategies>('block');
 
-  public customOverlayHost = input<ElementRef>();
+  public _customOverlayHostInput = input<ElementRef | undefined>(undefined, { alias: 'customOverlayHost' });
+  public customOverlayHost = linkedSignal<ElementRef | undefined>(() => this._customOverlayHostInput());
 
   public get top(): boolean {
     return (

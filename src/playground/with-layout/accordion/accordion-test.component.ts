@@ -1,8 +1,8 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-    selector: 'nb-accordion-test',
-    template: `
+  selector: 'nb-accordion-test',
+  template: `
     <nb-accordion>
       <nb-accordion-item>
         <nb-accordion-item-header>
@@ -26,7 +26,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
         </nb-accordion-item-body>
       </nb-accordion-item>
 
-      <nb-accordion-item expanded>
+      <nb-accordion-item [expanded]="true">
         <nb-accordion-item-header>
           Accordion #3
         </nb-accordion-item-header>
@@ -37,7 +37,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
         </nb-accordion-item-body>
       </nb-accordion-item>
 
-      <nb-accordion-item disabled>
+      <nb-accordion-item [disabled]="true">
         <nb-accordion-item-header>
           Accordion #4
         </nb-accordion-item-header>
@@ -49,8 +49,8 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
       </nb-accordion-item>
     </nb-accordion>
   `,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class AccordionTestComponent {
 }

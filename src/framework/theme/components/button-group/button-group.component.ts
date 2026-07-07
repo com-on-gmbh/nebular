@@ -22,13 +22,13 @@ import { from, merge, Observable, Subject } from 'rxjs';
 import { debounceTime, filter, startWith, switchMap, takeUntil } from 'rxjs/operators';
 
 import { NbStatusService } from '../../services/status.service';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
-import { NbComponentSize } from '../component-size';
-import { NbComponentShape } from '../component-shape';
-import { NbComponentOrCustomStatus } from '../component-status';
 import { NbButton } from '../button/base-button';
-import { NbButtonToggleAppearance, NbButtonToggleChange, NbButtonToggleDirective } from './button-toggle.directive';
+import { NbComponentShape } from '../component-shape';
+import { NbComponentSize } from '../component-size';
+import { NbComponentOrCustomStatus } from '../component-status';
+import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NB_BUTTON_GROUP } from './button-group-injection-tokens';
+import { NbButtonToggleAppearance, NbButtonToggleChange, NbButtonToggleDirective } from './button-toggle.directive';
 
 /**
  * `<nb-button-group>` visually groups buttons together and allow to control buttons properties and the state as a
@@ -100,11 +100,11 @@ import { NB_BUTTON_GROUP } from './button-group-injection-tokens';
  * button-group-ghost-divider-color:
  **/
 @Component({
-    selector: 'nb-button-group',
-    template: ` <ng-content></ng-content> `,
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    providers: [{ provide: NB_BUTTON_GROUP, useExisting: NbButtonGroupComponent }],
-    standalone: false
+  selector: 'nb-button-group',
+  template: ` <ng-content></ng-content> `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [{ provide: NB_BUTTON_GROUP, useExisting: NbButtonGroupComponent }],
+  standalone: false
 })
 export class NbButtonGroupComponent implements OnChanges, AfterContentInit {
   protected lastEmittedValue: any[] = [];
@@ -219,7 +219,7 @@ export class NbButtonGroupComponent implements OnChanges, AfterContentInit {
     return [];
   }
 
-  constructor(protected cd: ChangeDetectorRef, protected statusService: NbStatusService) {}
+  constructor(protected cd: ChangeDetectorRef, protected statusService: NbStatusService) { }
 
   ngOnChanges({ size, status, shape, multiple, filled, outline, ghost, disabled }: SimpleChanges) {
     if (size || status || shape || multiple || filled || outline || ghost || disabled) {
@@ -249,9 +249,9 @@ export class NbButtonGroupComponent implements OnChanges, AfterContentInit {
   }
 
   protected listenButtonPressedState(buttons: NbButton[]): void {
-    const toggleButtons: NbButtonToggleDirective[] = buttons.filter((button: NbButton) => {
-      return button instanceof NbButtonToggleDirective;
-    }) as NbButtonToggleDirective[];
+    const toggleButtons = buttons.filter(
+      (button: NbButton): button is NbButtonToggleDirective => button instanceof NbButtonToggleDirective,
+    );
 
     if (!toggleButtons.length) {
       return;

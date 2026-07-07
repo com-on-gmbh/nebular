@@ -56,11 +56,11 @@ export interface NbButtonProperties {
 // eslint-disable-next-line @angular-eslint/directive-class-suffix
 export abstract class NbButton implements AfterViewInit {
   // Internal input aliases — linked to writable signals so updateProperties() and subclass effects can overwrite them
-  protected _sizeInput = input<NbComponentSize>('medium', { alias: 'size' });
-  protected _statusInput = input<NbComponentOrCustomStatus>('basic', { alias: 'status' });
-  protected _shapeInput = input<NbComponentShape>('rectangle', { alias: 'shape' });
-  protected _appearanceInput = input<NbButtonAppearance>('filled', { alias: 'appearance' });
-  protected _disabledInput = input(false, { alias: 'disabled', transform: booleanAttribute });
+  public _sizeInput = input<NbComponentSize>('medium', { alias: 'size' });
+  public _statusInput = input<NbComponentOrCustomStatus>('basic', { alias: 'status' });
+  public _shapeInput = input<NbComponentShape>('rectangle', { alias: 'shape' });
+  public _appearanceInput = input<NbButtonAppearance>('filled', { alias: 'appearance' });
+  public _disabledInput = input(false, { alias: 'disabled', transform: booleanAttribute });
 
   /**
    * Button size, available sizes:

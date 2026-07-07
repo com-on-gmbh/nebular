@@ -4,39 +4,39 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  */
 
+import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectorRef,
   Directive,
   ElementRef,
   HostBinding,
   Inject,
-  OnInit,
   OnDestroy,
+  OnInit,
   PLATFORM_ID,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
-import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 
 import { NbLayoutDirectionService } from '../../services/direction.service';
 import { NB_WINDOW } from '../../theme.options';
 import { NbCellDirective, NbFooterCellDirective, NbHeaderCellDirective } from '../cdk/table/cell';
 import { NbCdkCell, NbCdkFooterCell, NbCdkHeaderCell } from '../cdk/table/type-mappings';
+import { NB_DEFAULT_ROW_LEVEL } from './data-source/tree-grid.model';
+import { NbTreeGridColumnDefDirective } from './tree-grid-column-def.directive';
+import { NbColumnsService } from './tree-grid-columns.service';
 import { NB_TREE_GRID } from './tree-grid-injection-tokens';
 import { NbTreeGridComponent } from './tree-grid.component';
-import { NbTreeGridColumnDefDirective } from './tree-grid-column-def.directive';
-import { NB_DEFAULT_ROW_LEVEL } from './data-source/tree-grid.model';
-import { NbColumnsService } from './tree-grid-columns.service';
 
 @Directive({
-    selector: 'td[nbTreeGridCell]',
-    host: {
-        'class': 'nb-tree-grid-cell',
-        'role': 'gridcell',
-    },
-    providers: [{ provide: NbCdkCell, useExisting: NbTreeGridCellDirective }],
-    standalone: false
+  selector: 'td[nbTreeGridCell]',
+  host: {
+    'class': 'nb-tree-grid-cell',
+    'role': 'gridcell',
+  },
+  providers: [{ provide: NbCdkCell, useExisting: NbTreeGridCellDirective }],
+  standalone: false
 })
 export class NbTreeGridCellDirective extends NbCellDirective implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -115,7 +115,7 @@ export class NbTreeGridCellDirective extends NbCellDirective implements OnInit, 
   }
 
   private get initialStartPadding(): string {
-      return this.directionService.isLtr()
+    return this.directionService.isLtr()
       ? this.initialLeftPadding
       : this.initialRightPadding;
   }
@@ -143,13 +143,13 @@ export class NbTreeGridCellDirective extends NbCellDirective implements OnInit, 
 }
 
 @Directive({
-    selector: 'th[nbTreeGridHeaderCell]',
-    host: {
-        'class': 'nb-tree-grid-header-cell',
-        'role': 'columnheader',
-    },
-    providers: [{ provide: NbCdkHeaderCell, useExisting: NbTreeGridHeaderCellDirective }],
-    standalone: false
+  selector: 'th[nbTreeGridHeaderCell]',
+  host: {
+    'class': 'nb-tree-grid-header-cell',
+    'role': 'columnheader',
+  },
+  providers: [{ provide: NbCdkHeaderCell, useExisting: NbTreeGridHeaderCellDirective }],
+  standalone: false
 })
 export class NbTreeGridHeaderCellDirective extends NbHeaderCellDirective implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -189,13 +189,13 @@ export class NbTreeGridHeaderCellDirective extends NbHeaderCellDirective impleme
 }
 
 @Directive({
-    selector: 'td[nbTreeGridFooterCell]',
-    host: {
-        'class': 'nb-tree-grid-footer-cell',
-        'role': 'gridcell',
-    },
-    providers: [{ provide: NbCdkFooterCell, useExisting: NbTreeGridFooterCellDirective }],
-    standalone: false
+  selector: 'td[nbTreeGridFooterCell]',
+  host: {
+    'class': 'nb-tree-grid-footer-cell',
+    'role': 'gridcell',
+  },
+  providers: [{ provide: NbCdkFooterCell, useExisting: NbTreeGridFooterCellDirective }],
+  standalone: false
 })
 export class NbTreeGridFooterCellDirective extends NbFooterCellDirective implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

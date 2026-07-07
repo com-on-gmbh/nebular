@@ -5,22 +5,16 @@
  */
 
 import {
-  ChangeDetectorRef,
   Directive,
-  ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
-  Inject,
   Input,
-  NgZone,
-  Optional,
   Output,
-  Renderer2,
+  inject,
 } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 
-import { NbStatusService } from '../../services/status.service';
 import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbButton, NbButtonAppearance } from '../button/base-button';
 import { NB_BUTTON_GROUP } from './button-group-injection-tokens';
@@ -43,12 +37,15 @@ export interface NbButtonToggleChange {
 })
 export class NbButtonToggleDirective extends NbButton {
   protected readonly _pressedChange$ = new Subject<NbButtonToggleChange>();
+  protected buttonGroup = inject(NB_BUTTON_GROUP, { optional: true });
 
   get pressedChange$(): Observable<NbButtonToggleChange> {
     return this._pressedChange$.asObservable();
   }
 
-  @Input() appearance: NbButtonToggleAppearance = 'filled';
+  constructor() {
+    super();
+  }
 
   /**
    * A value associated with the button.
@@ -135,17 +132,6 @@ export class NbButtonToggleDirective extends NbButton {
     if (this.buttonGroup?.multiple || !this.pressed) {
       this.pressed = !this.pressed;
     }
-  }
-
-  constructor(
-    protected renderer: Renderer2,
-    protected hostElement: ElementRef<HTMLElement>,
-    protected cd: ChangeDetectorRef,
-    protected zone: NgZone,
-    protected statusService: NbStatusService,
-    @Optional() @Inject(NB_BUTTON_GROUP) protected buttonGroup?,
-  ) {
-    super(renderer, hostElement, cd, zone, statusService);
   }
 
   /**
