@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
-    "lib": [
-      "es2018",
-      "dom"
-    ],
+    "lib": ["es2018", "dom"],
     "declaration": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -17,24 +13,14 @@
     "noUnusedParameters": false,
     "noUnusedLocals": false,
     "rootDir": ".",
-    "rootDirs": [
-      "../../src/framework/theme/schematics/util"
-    ],
+    "rootDirs": ["../../src/framework/theme/schematics/util"],
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "strictNullChecks": false,
     "target": "es6",
-    "types": [
-      "jasmine",
-      "node"
-    ]
+    "types": ["jasmine", "node"]
   },
-  "include": [
-    "./**/*"
-  ],
-  "exclude": [
-    "./**/files/**/*",
-    "dist"
-  ]
+  "include": ["./**/*"],
+  "exclude": ["./**/files/**/*", "dist"]
 }
