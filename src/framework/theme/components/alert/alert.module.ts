@@ -6,20 +6,10 @@
 
 import { NgModule } from '@angular/core';
 
-import { NbSharedModule } from '../shared/shared.module';
-
 import { NbAlertComponent } from './alert.component';
 
 @NgModule({
-  imports: [
-    NbSharedModule,
-  ],
-  declarations: [
-    NbAlertComponent,
-  ],
-  exports: [
-    NbAlertComponent,
-  ],
+  imports: [NbAlertComponent],
+  exports: [NbAlertComponent],
 })
-export class NbAlertModule {
-}
+export class NbAlertModule {}

@@ -29,17 +29,17 @@ import { filter, finalize, map, startWith, switchMap, takeUntil } from 'rxjs/ope
 
 import { NbLayoutDirection, NbLayoutDirectionService } from '../../services/direction.service';
 import { NbStatusService } from '../../services/status.service';
+import { NbAutocompleteDirective } from '../autocomplete/autocomplete.directive';
 import { NbFocusMonitor } from '../cdk/a11y/a11y.module';
 import {
   NbActiveDescendantKeyManager,
   NbActiveDescendantKeyManagerFactoryService,
 } from '../cdk/a11y/descendant-key-manager';
 import { BACKSPACE, DELETE, SPACE } from '../cdk/keycodes/keycodes';
-import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbComponentSize } from '../component-size';
-import { NbAutocompleteDirective } from '../autocomplete/autocomplete.directive';
-import { NbTagComponent } from './tag.component';
+import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbTagInputDirective } from './tag-input.directive';
+import { NbTagComponent } from './tag.component';
 
 /**
  *
@@ -64,15 +64,15 @@ import { NbTagInputDirective } from './tag-input.directive';
  * tag-list-with-input-round-border-radius:
  */
 @Component({
-    selector: 'nb-tag-list',
-    template: `
+  selector: 'nb-tag-list',
+  template: `
     <div class="nb-tag-list-tags-wrapper">
       <ng-content select="nb-tag, input[nbTagInput]"></ng-content>
     </div>
   `,
-    exportAs: 'nbTagList',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  exportAs: 'nbTagList',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false
 })
 export class NbTagListComponent implements OnInit, AfterContentInit, AfterViewInit, OnDestroy {
   protected readonly destroy$: Subject<void> = new Subject<void>();
@@ -169,7 +169,7 @@ export class NbTagListComponent implements OnInit, AfterContentInit, AfterViewIn
     protected activeDescendantKeyManagerFactory: NbActiveDescendantKeyManagerFactoryService<NbTagComponent>,
     protected directionService: NbLayoutDirectionService,
     protected statusService: NbStatusService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.focusMonitor
@@ -352,7 +352,7 @@ export class NbTagListComponent implements OnInit, AfterContentInit, AfterViewIn
 
   protected setAutocompleteCustomHost(): void {
     if (this.autocompleteDirective) {
-      this.autocompleteDirective.customOverlayHost = this.hostElement;
+      this.autocompleteDirective.customOverlayHost.set(this.hostElement);
     }
   }
 

@@ -40,17 +40,29 @@ $container-max-widths: (
 
 @function breakpoint-min($name, $breakpoints: $grid-breakpoints) {
   $min: map.get($breakpoints, $name);
-  @return if($min != 0, $min, null);
+  @if $min != 0 {
+    @return $min;
+  }
+
+  @return null;
 }
 
 @function breakpoint-next($name, $breakpoints: $grid-breakpoints, $breakpoint-names: map.keys($breakpoints)) {
   $n: list.index($breakpoint-names, $name);
-  @return if($n < list.length($breakpoint-names), list.nth($breakpoint-names, $n + 1), null);
+  @if $n < list.length($breakpoint-names) {
+    @return list.nth($breakpoint-names, $n + 1);
+  }
+
+  @return null;
 }
 
 @function breakpoint-max($name, $breakpoints: $grid-breakpoints) {
   $next: breakpoint-next($name, $breakpoints);
-  @return if($next, breakpoint-min($next, $breakpoints) - 0.02px, null);
+  @if $next {
+    @return breakpoint-min($next, $breakpoints) - 0.02px;
+  }
+
+  @return null;
 }
 
 @mixin media-breakpoint-down($name, $breakpoints: $grid-breakpoints) {

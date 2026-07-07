@@ -11,9 +11,9 @@ import {
   Directive,
   ElementRef,
   forwardRef,
-  HostBinding,
-  HostListener,
-  Input,
+  inject,
+  input,
+  linkedSignal,
   OnDestroy,
   QueryList,
   Renderer2,
@@ -22,22 +22,22 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { merge, Subject } from 'rxjs';
 import { filter, startWith, switchMap, takeUntil, tap } from 'rxjs/operators';
 
-import { NbOverlayRef, NbScrollStrategy } from '../cdk/overlay/mapping';
-import { NbTrigger, NbTriggerStrategy, NbTriggerStrategyBuilderService } from '../cdk/overlay/overlay-trigger';
-import { NbOverlayService } from '../cdk/overlay/overlay-service';
-import { ENTER, ESCAPE } from '../cdk/keycodes/keycodes';
-import {
-  NbAdjustableConnectedPositionStrategy,
-  NbAdjustment,
-  NbPosition,
-  NbPositionBuilderService,
-} from '../cdk/overlay/overlay-position';
 import {
   NbActiveDescendantKeyManager,
   NbActiveDescendantKeyManagerFactoryService,
   NbKeyManagerActiveItemMode,
 } from '../cdk/a11y/descendant-key-manager';
 import { NbScrollStrategies } from '../cdk/adapter/block-scroll-strategy-adapter';
+import { ENTER, ESCAPE } from '../cdk/keycodes/keycodes';
+import { NbOverlayRef, NbScrollStrategy } from '../cdk/overlay/mapping';
+import {
+  NbAdjustableConnectedPositionStrategy,
+  NbAdjustment,
+  NbPosition,
+  NbPositionBuilderService,
+} from '../cdk/overlay/overlay-position';
+import { NbOverlayService } from '../cdk/overlay/overlay-service';
+import { NbTrigger, NbTriggerStrategy, NbTriggerStrategyBuilderService } from '../cdk/overlay/overlay-trigger';
 import { NbOptionComponent } from '../option/option.component';
 import { NbAutocompleteComponent } from './autocomplete.component';
 
@@ -49,7 +49,19 @@ import { NbAutocompleteComponent } from './autocomplete.component';
  *
  * ### Installation
  *
- * Import `NbAutocompleteModule` to your feature module.
+ * Standalone (recommended):
+ * ```ts
+ * @Component({
+ *   standalone: true,
+ *   imports: [
+ *     // ...
+ *     NbAutocompleteDirective,
+ *   ],
+ * })
+ * export class MyComponent { }
+ * ```
+ *
+ * NgModule (legacy):
  * ```ts
  * @NgModule({
  *   imports: [
@@ -79,22 +91,31 @@ import { NbAutocompleteComponent } from './autocomplete.component';
  *
  * */
 @Directive({
-    selector: 'input[nbAutocomplete]',
-    providers: [
-        {
-            provide: NG_VALUE_ACCESSOR,
-            useExisting: forwardRef(() => NbAutocompleteDirective),
-            multi: true,
-        },
-    ],
-    standalone: false
+  selector: 'input[nbAutocomplete]',
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => NbAutocompleteDirective),
+      multi: true,
+    },
+  ],
+  standalone: true,
+  host: {
+    '[class.nb-autocomplete-position-top]': 'top',
+    '[class.nb-autocomplete-position-bottom]': 'bottom',
+    role: 'combobox',
+    'aria-autocomplete': 'list',
+    haspopup: 'true',
+    '[attr.aria-expanded]': 'ariaExpanded',
+    '[attr.aria-owns]': 'ariaOwns',
+    '[attr.aria-activedescendant]': 'ariaActiveDescendant',
+    '(input)': 'handleInput()',
+    '(keydown.arrowDown)': 'handleKeydown()',
+    '(keydown.arrowUp)': 'handleKeydown()',
+    '(blur)': 'handleBlur()',
+  },
 })
 export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, ControlValueAccessor {
-  /**
-   * NbAutocompleteComponent instance passed via input.
-   * */
-  protected _autocomplete: NbAutocompleteComponent<T>;
-
   /**
    * Trigger strategy used by overlay.
    * @docs-private
@@ -109,97 +130,82 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
 
   protected destroy$: Subject<void> = new Subject<void>();
 
-  protected _onChange: (value: T) => void = () => {};
+  protected _onChange: (value: T) => void = () => { };
 
-  protected _onTouched = () => {};
+  protected _onTouched = () => { };
 
   /**
    * Determines is autocomplete overlay opened.
    * */
-  get isOpen(): boolean {
+  public get isOpen(): boolean {
     return this.overlayRef && this.overlayRef.hasAttached();
   }
 
   /**
    * Determines is autocomplete overlay closed.
    * */
-  get isClosed(): boolean {
+  protected get isClosed(): boolean {
     return !this.isOpen;
   }
 
   /**
    * Provides autocomplete component.
    * */
-  @Input('nbAutocomplete')
-  get autocomplete(): NbAutocompleteComponent<T> {
-    return this._autocomplete;
-  }
-  set autocomplete(autocomplete: NbAutocompleteComponent<T>) {
-    this._autocomplete = autocomplete;
-  }
+  public autocomplete = input.required<NbAutocompleteComponent<T>>({ alias: 'nbAutocomplete' });
 
   /**
    * Determines options overlay offset (in pixels).
    **/
-  @Input() overlayOffset: number = 8;
+  public overlayOffset = input(8);
 
   /**
    * Determines options overlay scroll strategy.
    **/
-  @Input() scrollStrategy: NbScrollStrategies = 'block';
+  public scrollStrategy = input<NbScrollStrategies>('block');
 
-  @Input() customOverlayHost: ElementRef;
+  public _customOverlayHostInput = input<ElementRef | undefined>(undefined, { alias: 'customOverlayHost' });
+  public customOverlayHost = linkedSignal<ElementRef | undefined>(() => this._customOverlayHostInput());
 
-  @HostBinding('class.nb-autocomplete-position-top')
-  get top(): boolean {
-    return this.isOpen && this.autocomplete.options.length && this.autocomplete.overlayPosition === NbPosition.TOP;
+  public get top(): boolean {
+    return (
+      this.isOpen && !!this.autocomplete().options.length && this.autocomplete().overlayPosition === NbPosition.TOP
+    );
   }
 
-  @HostBinding('class.nb-autocomplete-position-bottom')
-  get bottom(): boolean {
-    return this.isOpen && this.autocomplete.options.length && this.autocomplete.overlayPosition === NbPosition.BOTTOM;
+  public get bottom(): boolean {
+    return (
+      this.isOpen && !!this.autocomplete().options.length && this.autocomplete().overlayPosition === NbPosition.BOTTOM
+    );
   }
 
-  @HostBinding('attr.role')
-  role: string = 'combobox';
-
-  @HostBinding('attr.aria-autocomplete')
-  ariaAutocomplete: string = 'list';
-
-  @HostBinding('attr.haspopup')
-  hasPopup: string = 'true';
-
-  @HostBinding('attr.aria-expanded')
-  get ariaExpanded(): string {
+  public get ariaExpanded(): string | false {
     return this.isOpen && this.isOpen.toString();
   }
 
-  @HostBinding('attr.aria-owns')
-  get ariaOwns() {
-    return this.isOpen ? this.autocomplete.id : null;
+  public get ariaOwns(): string | null {
+    return this.isOpen ? this.autocomplete().id : null;
   }
 
-  @HostBinding('attr.aria-activedescendant')
-  get ariaActiveDescendant() {
+  public get ariaActiveDescendant(): string | null {
     return this.isOpen && this.keyManager.activeItem ? this.keyManager.activeItem.id : null;
   }
 
-  constructor(
-    protected hostRef: ElementRef,
-    protected overlay: NbOverlayService,
-    protected cd: ChangeDetectorRef,
-    protected triggerStrategyBuilder: NbTriggerStrategyBuilderService,
-    protected positionBuilder: NbPositionBuilderService,
-    protected activeDescendantKeyManagerFactory: NbActiveDescendantKeyManagerFactoryService<NbOptionComponent<T>>,
-    protected renderer: Renderer2,
-  ) {}
+  protected hostRef = inject(ElementRef);
+  protected overlay = inject(NbOverlayService);
+  protected cd = inject(ChangeDetectorRef);
+  protected triggerStrategyBuilder = inject(NbTriggerStrategyBuilderService);
+  protected positionBuilder = inject(NbPositionBuilderService);
+  protected activeDescendantKeyManagerFactory = inject<
+    NbActiveDescendantKeyManagerFactoryService<NbOptionComponent<T>>
+  >(NbActiveDescendantKeyManagerFactoryService);
+  protected renderer = inject(Renderer2);
 
-  ngAfterViewInit() {
+  public ngAfterViewInit(): void {
     this.triggerStrategy = this.createTriggerStrategy();
     this.subscribeOnTriggers();
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     if (this.triggerStrategy) {
       this.triggerStrategy.destroy();
     }
@@ -216,66 +222,62 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
     this.destroy$.complete();
   }
 
-  @HostListener('input')
-  handleInput() {
+  public handleInput(): void {
     const currentValue = this.hostRef.nativeElement.value;
     this._onChange(currentValue);
     this.setHostInputValue(this.getDisplayValue(currentValue));
     this.show();
   }
 
-  @HostListener('keydown.arrowDown')
-  @HostListener('keydown.arrowUp')
-  handleKeydown() {
+  public handleKeydown(): void {
     this.show();
   }
 
-  @HostListener('blur')
-  handleBlur() {
+  public handleBlur(): void {
     this._onTouched();
   }
 
-  show() {
+  public show(): void {
     if (this.shouldShow()) {
       this.attachToOverlay();
       this.setActiveItem();
     }
   }
 
-  hide() {
+  public hide(): void {
     if (this.isOpen) {
       this.overlayRef.detach();
-      // Need to update class via @HostBinding
+      // Need to update host bindings — overlay state is non-signal
       this.cd.markForCheck();
     }
   }
 
-  writeValue(value: T): void {
+  public writeValue(value: T): void {
     this.handleInputValueUpdate(value);
   }
 
-  registerOnChange(fn: (value: any) => {}): void {
+  public registerOnChange(fn: (value: any) => {}): void {
     this._onChange = fn;
   }
 
-  registerOnTouched(fn: any): void {
+  public registerOnTouched(fn: any): void {
     this._onTouched = fn;
   }
 
-  setDisabledState(disabled: boolean): void {
+  public setDisabledState(disabled: boolean): void {
     this.renderer.setProperty(this.hostRef.nativeElement, 'disabled', disabled);
   }
 
-  protected subscribeOnOptionClick() {
+  protected subscribeOnOptionClick(): void {
     /**
      * If the user changes provided options list in the runtime we have to handle this
      * and resubscribe on options selection changes event.
      * Otherwise, the user will not be able to select new options.
      * */
-    this.autocomplete.options.changes
-      .pipe(
+    this.autocomplete()
+      .options.changes.pipe(
         tap(() => this.setActiveItem()),
-        startWith(this.autocomplete.options),
+        startWith(this.autocomplete().options),
         switchMap((options: QueryList<NbOptionComponent<T>>) => {
           return merge(...options.map((option) => option.click));
         }),
@@ -284,9 +286,9 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
       .subscribe((clickedOption: NbOptionComponent<T>) => this.handleInputValueUpdate(clickedOption.value, true));
   }
 
-  protected subscribeOnPositionChange() {
+  protected subscribeOnPositionChange(): void {
     this.positionStrategy.positionChange.pipe(takeUntil(this.destroy$)).subscribe((position: NbPosition) => {
-      this.autocomplete.overlayPosition = position;
+      this.autocomplete().overlayPosition = position;
       this.cd.detectChanges();
     });
   }
@@ -295,38 +297,37 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
     return this.keyManager.activeItem;
   }
 
-  protected setupAutocomplete() {
-    this.autocomplete.setHost(this.customOverlayHost || this.hostRef);
+  protected setupAutocomplete(): void {
+    this.autocomplete().setHost(this.customOverlayHost() || this.hostRef);
   }
 
-  protected getDisplayValue(value: string) {
-    const displayFn = this.autocomplete.handleDisplayFn;
+  protected getDisplayValue(value: string): string {
+    const displayFn = this.autocomplete().handleDisplayFn();
     return displayFn ? displayFn(value) : value;
   }
 
-  protected getContainer() {
-    return (
-      this.overlayRef &&
-      this.isOpen &&
-      <ComponentRef<any>>{
-        location: {
-          nativeElement: this.overlayRef.overlayElement,
-        },
-      }
-    );
+  protected getContainer(): ComponentRef<any> | null {
+    if (!this.overlayRef || !this.isOpen) {
+      return null;
+    }
+    return <ComponentRef<any>>{
+      location: {
+        nativeElement: this.overlayRef.overlayElement,
+      },
+    };
   }
 
-  protected handleInputValueUpdate(value: T, focusInput: boolean = false) {
+  protected handleInputValueUpdate(value: T, focusInput: boolean = false): void {
     this.setHostInputValue(value ?? '');
     this._onChange(value);
     if (focusInput) {
       this.hostRef.nativeElement.focus();
     }
-    this.autocomplete.emitSelected(value);
+    this.autocomplete().emitSelected(value);
     this.hide();
   }
 
-  protected subscribeOnTriggers() {
+  protected subscribeOnTriggers(): void {
     this.triggerStrategy.show$.pipe(filter(() => this.isClosed)).subscribe(() => this.show());
 
     this.triggerStrategy.hide$.pipe(filter(() => this.isOpen)).subscribe(() => this.hide());
@@ -341,18 +342,18 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
   }
 
   protected createKeyManager(): void {
-    this.keyManager = this.activeDescendantKeyManagerFactory.create(this.autocomplete.options);
+    this.keyManager = this.activeDescendantKeyManagerFactory.create(this.autocomplete().options);
   }
 
-  protected setHostInputValue(value) {
+  protected setHostInputValue(value: any): void {
     this.hostRef.nativeElement.value = this.getDisplayValue(value);
   }
 
   protected createPositionStrategy(): NbAdjustableConnectedPositionStrategy {
     return this.positionBuilder
-      .connectedTo(this.customOverlayHost || this.hostRef)
+      .connectedTo(this.customOverlayHost() || this.hostRef)
       .position(NbPosition.BOTTOM)
-      .offset(this.overlayOffset)
+      .offset(this.overlayOffset())
       .adjustment(NbAdjustment.VERTICAL);
   }
 
@@ -378,34 +379,34 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
       });
   }
 
-  protected setActiveItem() {
+  protected setActiveItem(): void {
     // If autocomplete has activeFirst input set to true,
     // keyManager set first option active, otherwise - reset active option.
-    const mode = this.autocomplete.activeFirst
+    const mode = this.autocomplete().activeFirst()
       ? NbKeyManagerActiveItemMode.FIRST_ACTIVE
       : NbKeyManagerActiveItemMode.RESET_ACTIVE;
     this.keyManager.setActiveItem(mode);
     this.cd.detectChanges();
   }
 
-  protected attachToOverlay() {
+  protected attachToOverlay(): void {
     if (!this.overlayRef) {
       this.setupAutocomplete();
       this.initOverlay();
     }
-    this.overlayRef.attach(this.autocomplete.portal);
+    this.overlayRef.attach(this.autocomplete().portal());
   }
 
-  protected createOverlay() {
+  protected createOverlay(): void {
     const scrollStrategy = this.createScrollStrategy();
     this.overlayRef = this.overlay.create({
       positionStrategy: this.positionStrategy,
       scrollStrategy,
-      panelClass: this.autocomplete.optionsPanelClass,
+      panelClass: this.autocomplete().optionsPanelClass(),
     });
   }
 
-  protected initOverlay() {
+  protected initOverlay(): void {
     this.positionStrategy = this.createPositionStrategy();
 
     this.createKeyManager();
@@ -416,16 +417,18 @@ export class NbAutocompleteDirective<T> implements OnDestroy, AfterViewInit, Con
     this.subscribeOnOverlayKeys();
   }
 
-  protected checkOverlayVisibility() {
-    this.autocomplete.options.changes.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      if (!this.autocomplete.options.length) {
-        this.hide();
-      }
-    });
+  protected checkOverlayVisibility(): void {
+    this.autocomplete()
+      .options.changes.pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (!this.autocomplete().options.length) {
+          this.hide();
+        }
+      });
   }
 
   protected createScrollStrategy(): NbScrollStrategy {
-    return this.overlay.scrollStrategies[this.scrollStrategy]();
+    return this.overlay.scrollStrategies[this.scrollStrategy()]();
   }
 
   protected shouldShow(): boolean {

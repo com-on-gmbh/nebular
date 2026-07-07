@@ -229,24 +229,30 @@ export class NbCalendarRangeComponent<D> {
   /**
    * Custom month cell component. Have to implement `NbCalendarCell` interface.
    * */
-  @Input('monthCellComponent')
-  set _monthCellComponent(cellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>>) {
+  @Input()
+  set monthCellComponent(cellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>>) {
     if (cellComponent) {
-      this.monthCellComponent = cellComponent;
+      this._monthCellComponent = cellComponent;
     }
   }
-  @Input() monthCellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>> = NbCalendarRangeMonthCellComponent;
+  get monthCellComponent(): Type<NbCalendarCell<D, NbCalendarRange<D>>> {
+    return this._monthCellComponent;
+  }
+  protected _monthCellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>> = NbCalendarRangeMonthCellComponent;
 
   /**
    * Custom year cell component. Have to implement `NbCalendarCell` interface.
    * */
-  @Input('yearCellComponent')
-  set _yearCellComponent(cellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>>) {
+  @Input()
+  set yearCellComponent(cellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>>) {
     if (cellComponent) {
-      this.yearCellComponent = cellComponent;
+      this._yearCellComponent = cellComponent;
     }
   }
-  yearCellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>> = NbCalendarRangeYearCellComponent;
+  get yearCellComponent(): Type<NbCalendarCell<D, NbCalendarRange<D>>> {
+    return this._yearCellComponent;
+  }
+  protected _yearCellComponent: Type<NbCalendarCell<D, NbCalendarRange<D>>> = NbCalendarRangeYearCellComponent;
 
   /**
    * Size of the calendar and entire components.

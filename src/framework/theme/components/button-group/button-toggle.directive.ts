@@ -5,22 +5,16 @@
  */
 
 import {
-  ChangeDetectorRef,
   Directive,
-  ElementRef,
   EventEmitter,
   HostBinding,
   HostListener,
-  Inject,
   Input,
-  NgZone,
-  Optional,
   Output,
-  Renderer2,
+  inject,
 } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 
-import { NbStatusService } from '../../services/status.service';
 import { convertToBoolProperty, NbBooleanInput } from '../helpers';
 import { NbButton, NbButtonAppearance } from '../button/base-button';
 import { NB_BUTTON_GROUP } from './button-group-injection-tokens';
@@ -43,12 +37,15 @@ export interface NbButtonToggleChange {
 })
 export class NbButtonToggleDirective extends NbButton {
   protected readonly _pressedChange$ = new Subject<NbButtonToggleChange>();
+  protected buttonGroup = inject(NB_BUTTON_GROUP, { optional: true });
 
   get pressedChange$(): Observable<NbButtonToggleChange> {
     return this._pressedChange$.asObservable();
   }
 
-  @Input() appearance: NbButtonToggleAppearance = 'filled';
+  constructor() {
+    super();
+  }
 
   /**
    * A value associated with the button.
@@ -86,38 +83,45 @@ export class NbButtonToggleDirective extends NbButton {
 
   @HostBinding('class.status-primary')
   get primary(): boolean {
-    return this.pressed && (this.status === 'basic' || this.status === 'primary');
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && (statusValue === 'basic' || statusValue === 'primary');
   }
 
   @HostBinding('class.status-success')
   get success(): boolean {
-    return this.pressed && this.status === 'success';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'success';
   }
 
   @HostBinding('class.status-info')
   get info(): boolean {
-    return this.pressed && this.status === 'info';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'info';
   }
 
   @HostBinding('class.status-warning')
   get warning(): boolean {
-    return this.pressed && this.status === 'warning';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'warning';
   }
 
   @HostBinding('class.status-danger')
   get danger(): boolean {
-    return this.pressed && this.status === 'danger';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'danger';
   }
 
   @HostBinding('class.status-control')
   get control(): boolean {
-    return this.pressed && this.status === 'control';
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    return this.pressed && statusValue === 'control';
   }
 
   @HostBinding('class')
   get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
+    const statusValue = typeof this.status === 'function' ? this.status() : this.status;
+    if (this.statusService.isCustomStatus(statusValue)) {
+      return [this.statusService.getStatusClass(statusValue)];
     }
     return [];
   }
@@ -128,17 +132,6 @@ export class NbButtonToggleDirective extends NbButton {
     if (this.buttonGroup?.multiple || !this.pressed) {
       this.pressed = !this.pressed;
     }
-  }
-
-  constructor(
-    protected renderer: Renderer2,
-    protected hostElement: ElementRef<HTMLElement>,
-    protected cd: ChangeDetectorRef,
-    protected zone: NgZone,
-    protected statusService: NbStatusService,
-    @Optional() @Inject(NB_BUTTON_GROUP) protected buttonGroup?,
-  ) {
-    super(renderer, hostElement, cd, zone, statusService);
   }
 
   /**

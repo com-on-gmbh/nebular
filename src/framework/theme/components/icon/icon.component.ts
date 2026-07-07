@@ -8,11 +8,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
-  HostBinding,
-  Input,
-  OnChanges,
-  OnInit,
   Renderer2,
+  computed,
+  effect,
+  inject,
+  input,
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -108,136 +108,121 @@ export interface NbIconConfig {
  * icon-control-color:
  */
 @Component({
-    selector: 'nb-icon',
-    styleUrls: [`./icon.component.scss`],
-    template: '',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: false
+  selector: 'nb-icon',
+  styleUrls: [`./icon.component.scss`],
+  template: '',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [],
+  host: {
+    '[innerHtml]': 'html',
+    '[class.status-primary]': 'effectiveStatus() === "primary"',
+    '[class.status-info]': 'effectiveStatus() === "info"',
+    '[class.status-success]': 'effectiveStatus() === "success"',
+    '[class.status-warning]': 'effectiveStatus() === "warning"',
+    '[class.status-danger]': 'effectiveStatus() === "danger"',
+    '[class.status-basic]': 'effectiveStatus() === "basic"',
+    '[class.status-control]': 'effectiveStatus() === "control"',
+    '[class]': 'additionalClasses',
+  },
 })
-export class NbIconComponent implements NbIconConfig, OnChanges, OnInit {
+export class NbIconComponent {
+  private sanitizer = inject(DomSanitizer);
+  private iconLibrary = inject(NbIconLibraries);
+  private el = inject(ElementRef);
+  private renderer = inject(Renderer2);
+  private statusService = inject(NbStatusService);
 
-  protected iconDef;
-  protected prevClasses = [];
+  protected prevClasses: string[] = [];
 
-  @HostBinding('innerHtml')
-  html: SafeHtml = '';
-
-  @HostBinding('class.status-primary')
-  get primary() {
-    return this.status === 'primary';
-  }
-
-  @HostBinding('class.status-info')
-  get info() {
-    return this.status === 'info';
-  }
-
-  @HostBinding('class.status-success')
-  get success() {
-    return this.status === 'success';
-  }
-
-  @HostBinding('class.status-warning')
-  get warning() {
-    return this.status === 'warning';
-  }
-
-  @HostBinding('class.status-danger')
-  get danger() {
-    return this.status === 'danger';
-  }
-
-  @HostBinding('class.status-basic')
-  get basic() {
-    return this.status === 'basic';
-  }
-
-  @HostBinding('class.status-control')
-  get control() {
-    return this.status === 'control';
-  }
-
-  @HostBinding('class')
-  get additionalClasses(): string[] {
-    if (this.statusService.isCustomStatus(this.status)) {
-      return [this.statusService.getStatusClass(this.status)];
-    }
-    return [];
-  }
+  public html: SafeHtml = '';
 
   /**
    * Icon name
-   * @param {string} status
    */
-  @Input() icon: string;
+  public icon = input<string>();
 
   /**
    * Icon pack name
-   * @param {string} status
    */
-  @Input() pack: string;
+  public pack = input<string>();
 
   /**
    * Additional icon settings
    * @param {[name: string]: any}
    */
-  @Input() options: { [name: string]: any };
+  public options = input<{ [name: string]: any }>();
 
   /**
    * Icon status (adds specific styles):
    * `basic`, `primary`, `info`, `success`, `warning`, `danger`, `control`
    */
-  @Input() status?: NbComponentOrCustomStatus;
+  public status = input<NbComponentOrCustomStatus>();
 
   /**
    * Sets all icon configurable properties via config object.
    * If passed value is a string set icon name.
    * @docs-private
    */
-  @Input()
-  get config(): string | NbIconConfig {
-    return this._config;
-  }
-  set config(value: string | NbIconConfig) {
-    if (!value) {
-      return;
+  public config = input<string | NbIconConfig>();
+
+  /** Effective status, merging `config` over the `status` input. Referenced in host metadata. */
+  public effectiveStatus = computed<NbComponentOrCustomStatus | undefined>(() => {
+    const cfg = this.config();
+    if (cfg && typeof cfg !== 'string') {
+      return cfg.status;
     }
+    return this.status();
+  });
 
-    this._config = value;
-
-    if (typeof value === 'string') {
-      this.icon = value;
-    } else {
-      this.icon = value.icon;
-      this.pack = value.pack;
-      this.status = value.status;
-      this.options = value.options;
+  public get additionalClasses(): string[] {
+    if (this.statusService.isCustomStatus(this.effectiveStatus())) {
+      return [this.statusService.getStatusClass(this.effectiveStatus())];
     }
-  }
-  protected _config: string | NbIconConfig;
-
-  constructor(
-    protected sanitizer: DomSanitizer,
-    protected iconLibrary: NbIconLibraries,
-    protected el: ElementRef,
-    protected renderer: Renderer2,
-    protected statusService: NbStatusService,
-  ) {}
-
-  ngOnInit() {
-    this.iconDef = this.renderIcon(this.icon, this.pack, this.options);
+    return [];
   }
 
-  ngOnChanges() {
-    const iconDef = this.iconLibrary.getIcon(this.icon, this.pack);
-    if (iconDef) {
-      this.renderIcon(this.icon, this.pack, this.options);
-    } else {
-      this.clearIcon();
+  private effectiveIcon = computed<string | undefined>(() => {
+    const cfg = this.config();
+    if (!cfg) {
+      return this.icon();
     }
+    return typeof cfg === 'string' ? cfg : cfg.icon;
+  });
+
+  private effectivePack = computed<string | undefined>(() => {
+    const cfg = this.config();
+    if (!cfg || typeof cfg === 'string') {
+      return this.pack();
+    }
+    return cfg.pack;
+  });
+
+  private effectiveOptions = computed<{ [name: string]: any } | undefined>(() => {
+    const cfg = this.config();
+    if (!cfg || typeof cfg === 'string') {
+      return this.options();
+    }
+    return cfg.options;
+  });
+
+  constructor() {
+    effect(() => {
+      const icon = this.effectiveIcon();
+      const pack = this.effectivePack();
+      const options = this.effectiveOptions();
+      if (icon) {
+        const iconDef = this.iconLibrary.getIcon(icon, pack);
+        if (iconDef) {
+          this.renderIcon(icon, pack, options);
+        } else {
+          this.clearIcon();
+        }
+      }
+    });
   }
 
-  renderIcon(name: string, pack?: string, options?: { [name: string]: any }) {
+  public renderIcon(name: string, pack?: string, options?: { [name: string]: any }) {
     const iconDefinition = this.iconLibrary.getIcon(name, pack);
 
     if (!iconDefinition) {
@@ -258,7 +243,7 @@ export class NbIconComponent implements NbIconConfig, OnChanges, OnInit {
     this.assignClasses([]);
   }
 
-  protected assignClasses(classes: string[]) {
+  protected assignClasses(classes: string[]): void {
     this.prevClasses.forEach((className: string) => {
       this.renderer.removeClass(this.el.nativeElement, className);
     });
